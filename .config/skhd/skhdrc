@@ -1,0 +1,51 @@
+# Navigation
+ctrl + alt - a : yabai -m window --focus west
+ctrl + alt - d : yabai -m window --focus east
+ctrl + alt - s : yabai -m window --focus south
+ctrl + alt - w : yabai -m window --focus north
+
+# Moving windows
+ctrl + shift - a : yabai -m window --warp west
+ctrl + shift - d : yabai -m window --warp east
+ctrl + shift - s : yabai -m window --warp south
+ctrl + shift - w : yabai -m window --warp north
+
+# Rotate layout
+ctrl - l : yabai -m space --rotate 90
+# Balance the layout
+ctrl - k : yabai -m space --balance
+
+# Resize windows
+ctrl - a : yabai -m window --resize left:-100:0 ; yabai -m window --resize right:-100:0
+ctrl - s : yabai -m window --resize bottom:0:100 ; yabai -m window --resize top:0:100
+ctrl - w : yabai -m window --resize top:0:-100 ; yabai -m window --resize bottom:0:-100
+ctrl - d : yabai -m window --resize right:100:0 ; yabai -m window --resize left:100:0
+
+# Float / Unfloat window
+ctrl - space : yabai -m window --toggle float
+
+# move window to display left and right
+shift + alt - a : yabai -m window --display west; yabai -m display --focus west;
+shift + alt - d : yabai -m window --display east; yabai -m display --focus east;
+
+# autofocus windows
+ctrl - o : yabai -m config focus_follows_mouse autofocus
+ctrl - p : yabai -m config focus_follows_mouse off
+
+# stop/start/restart yabai
+ctrl + alt + shift - q : yabai --stop-service
+ctrl + alt + shift - s : yabai --start-service
+ctrl + alt + shift - r : yabai --restart-service
+
+# Make fullscreen
+ctrl - f : yabai -m window --toggle zoom-fullscreen
+
+ctrl + alt - 1 : yabai -m window --space 1 --focus 
+ctrl + alt - 2 : yabai -m window --space 2 --focus 
+ctrl + alt - 3 : yabai -m window --space 3 --focus 
+ctrl + alt - 4 : yabai -m window --space 4 --focus 
+ctrl + alt - 5 : yabai -m window --space 5 --focus 
+ctrl + alt - 6 : yabai -m window --space 6 --focus 
+ctrl + alt - 7 : yabai -m window --space 7 --focus 
+ctrl + alt - 8 : yabai -m window --space 8 --focus
+ctrl + alt - 9 : yabai -m window --space 9 --focus
