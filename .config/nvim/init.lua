@@ -1,6 +1,3 @@
 require("adam.core")
 require("adam.lazy")
-vim.g.calendar_google_calendar = 1
-vim.g.calendar_google_task = 1
-vim.cmd('source ~/.cache/calender.vim/credentails.vim')
-
+vim.g.python3_host_prog = 'C:/Users/Adam/pyver/py3115/python3.EXE'
