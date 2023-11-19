@@ -16,8 +16,15 @@ return {
                     h = { "<cmd>TermExec cmd='pandoc %:p -o %:p:r.html'<CR>" , "html"},
                     l = { "<cmd>TermExec cmd='pandoc %:p -o %:p:r.tex'<CR>"  , "latex"},
                     p = { "<cmd>TermExec cmd='pandoc %:p -o %:p:r.pdf'<CR>"  , "pdf"},
-                 --   p = { "<cmd>2TermExec dir='G:\\My Drive\\notes' cmd='pandoc  -o test.pdf'<CR>"  , "pdf"},
                 },
+                e = {name = "File Explorer"},
+                f = {name = "Find Files"},
+                t = {name = "Tab"},
+                w = {name = "Vimwiki"},
+                c = {name = "Code actions"},
+                r = {name = "Smart Rename/ RestartLSP"},
+                -- z = {name = "Folding"},
+                z = {name = "Folding"},
             },
         })
     end

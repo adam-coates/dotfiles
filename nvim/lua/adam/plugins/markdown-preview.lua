@@ -21,5 +21,6 @@ return {
         vim.g.mkdp_auto_close = 0
         vim.g.mkdp_page_title = '${name} - Preview'
         vim.g.mkdp_echo_preview_url = 1
+
     end,
 }

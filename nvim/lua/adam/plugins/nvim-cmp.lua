@@ -56,8 +56,5 @@ return {
         }),
       },
     })
---    cmp_zotcite.setup({
---            filetype = {"markdown", "rmd", "vimwiki"}
---        })
   end,
 }
