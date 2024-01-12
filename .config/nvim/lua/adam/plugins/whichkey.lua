@@ -19,7 +19,11 @@ return {
                 },
                 k = {
                     name = "Gkeep2MD",
-                    k = { "<cmd>TermExec cmd='python3 /opt/homebrew/lib/python3.11/site-packages/keep-it-markdown-0.5.3/kim.py'<CR>", "kim"},
+                    k = { "<cmd>TermExec cmd='python3 /home/linuxbrew/.linuxbrew/lib/python3.11/site-packages/keep-it-markdown-0.5.3/kim.py'<CR>", "kim"},
+                },
+                m ={
+                    name = "MdTOC",
+                    t = { "<cmd>TermExec cmd='markdown-toc -i %:p'<CR>" , "Create TOC"}
                 },
                 e = {name = "File Explorer"},
                 f = {name = "Find Files"},
