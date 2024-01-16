@@ -1,6 +1,6 @@
 return {
   "hrsh7th/nvim-cmp",
---  event = "InsertEnter",
+--  event = "VeryLazy",
   dependencies = {
     "hrsh7th/cmp-buffer", -- source for text in buffer
     "hrsh7th/cmp-path", -- source for file system paths
@@ -9,17 +9,13 @@ return {
     "rafamadriz/friendly-snippets", -- useful snippets
     "onsails/lspkind.nvim", -- vs-code like pictograms
     "jalvesaq/cmp-zotcite",
-    {
-            "L3MON4D3/LuaSnip",
-            config = function()
-               -- require("luasnip/loaders/from_vscode").load({})
-                require'luasnip'.filetype_extend("vimwiki", {"markdown"})
-            end,
-            depedencies = {
-                "saadparwaiz1/cmp_luasnip", -- for autocompletion
-                "rafamadriz/friendly-snippets",
-            },
-        },
+--    {
+--            "L3MON4D3/LuaSnip",
+--            depedencies = {
+--                "saadparwaiz1/cmp_luasnip", -- for autocompletion
+--                "rafamadriz/friendly-snippets",
+--            },
+--        },
   },
   config = function()
     local cmp = require("cmp")
@@ -49,10 +45,7 @@ return {
       }),
       -- sources for autocompletion
       sources = cmp.config.sources({
-        {
-                    name = "luasnip",
-                    priority = 50,
-        }, -- snippets
+        {name = "luasnip"}, -- snippets
         { name = "nvim_lsp" },
         { name = "buffer" }, -- text within current buffer
         { name = "path" }, -- file system paths
