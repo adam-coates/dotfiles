@@ -1,5 +1,10 @@
 local opt = vim.opt
 
+-- set spell
+opt.spelllang = "en_gb"
+opt.spell = true
+
+
 -- line numbers
 opt.relativenumber = true
 opt.number = true
@@ -22,7 +27,7 @@ opt.cursorline = true
 
 -- appearance
 opt.termguicolors = true
-opt.background = "dark" 
+opt.background = "dark"
 opt.signcolumn = "yes"
 
 -- backspace

@@ -108,8 +108,8 @@ return {
             on_attach = on_attach,
     })
     lspconfig["ltex"].setup({
- --           capabilities = capabilities,
- --           on_attach = on_attach,
+           capabilities = capabilities,
+           on_attach = on_attach,
             settings = {
                 ltex = {
                     language = "en-GB",
