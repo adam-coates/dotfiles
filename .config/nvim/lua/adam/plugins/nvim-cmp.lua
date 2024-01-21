@@ -9,13 +9,6 @@ return {
     "rafamadriz/friendly-snippets", -- useful snippets
     "onsails/lspkind.nvim", -- vs-code like pictograms
     "jalvesaq/cmp-zotcite",
---    {
---            "L3MON4D3/LuaSnip",
---            depedencies = {
---                "saadparwaiz1/cmp_luasnip", -- for autocompletion
---                "rafamadriz/friendly-snippets",
---            },
---        },
   },
   config = function()
     local cmp = require("cmp")
@@ -25,7 +18,17 @@ return {
     local lspkind = require("lspkind")
 
     require("luasnip/loaders/from_vscode").load({})
-    cmp.setup({
+    luasnip.filetype_extend("vimwiki", {"markdown"})
+ local check_back_space = function()
+  local col = vim.fn.col('.') - 1
+  if col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') then
+    return true
+  else
+    return false
+  end
+end
+
+cmp.setup({
       completion = {
         completeopt = "menu,menuone,preview,noselect",
       },
@@ -34,7 +37,7 @@ return {
           luasnip.lsp_expand(args.body)
         end,
       },
-      mapping = cmp.mapping.preset.insert({
+            mapping = cmp.mapping.preset.insert({
         ["<C-k>"] = cmp.mapping.select_prev_item(), -- previous suggestion
         ["<C-j>"] = cmp.mapping.select_next_item(), -- next suggestion
         ["<C-b>"] = cmp.mapping.scroll_docs(-4),
@@ -42,7 +45,19 @@ return {
         ["<C-Space>"] = cmp.mapping.complete(), -- show completion suggestions
         ["<C-e>"] = cmp.mapping.abort(), -- close completion window
         ["<CR>"] = cmp.mapping.confirm({ select = false }),
-      }),
+        ['<Tab>'] = cmp.mapping(function(fallback)
+                if cmp.visible() then
+                    cmp.confirm({select = true})
+                elseif luasnip.jumpable(1) then
+                    luasnip.jump(1)
+                elseif check_back_space() then
+                    fallback()
+                else
+                    cmp.complete()
+                end
+            end, {'i', 's'}),
+            ['<S-Tab>'] = cmp.mapping(function() luasnip.jump(-1) end, {'i', 's'}),
+            }),
       -- sources for autocompletion
       sources = cmp.config.sources({
         {name = "luasnip"}, -- snippets

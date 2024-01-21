@@ -41,3 +41,25 @@ opt.splitright = true
 opt.splitbelow = true
 
 opt.iskeyword:append("-")
+
+--vim.opt.list = true
+--vim.opt.listchars = {
+--    space = "⋅",
+--    eol = "↴",
+--    tab = "▎_",
+--    tab = "|_>",
+--      tab = "| ",
+--    trail = "•",
+--    extends = "❯",
+--    precedes = "❮",
+--    nbsp = "",
+--}
+--vim.opt.fillchars = {
+--    fold = " ",
+--    foldsep = " ",
+--    foldopen = "",
+--    foldclose = "",
+--    diff = "╱",
+--}
+-- Set the char for the indent line
+--vim.g.indentline_char = '│'

@@ -6,7 +6,7 @@ return {
     init = function()
         vim.g.mkdp_filetypes = { "markdown" }
     end,
-    ft = { "markdown" },
+    ft = { "markdown",  },
     config = function()
         -- Can't get lazy build to work ¯\_(ツ)_/¯
         -- This first time loading the plugin, there will be a significant delay becuase the function is synchronous, but after that it shouldn't be noticeable

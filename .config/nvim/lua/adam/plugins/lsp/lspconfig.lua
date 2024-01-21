@@ -116,6 +116,26 @@ return {
                 }
             }
         })
+        vim.api.nvim_create_user_command("LtexLangChangeLanguage", function(data)
+            local language = data.fargs[1]
+            local bufnr = vim.api.nvim_get_current_buf()
+            local client = vim.lsp.get_active_clients({ bufnr = bufnr, name = 'ltex' })
+            if #client == 0 then
+                vim.notify("No ltex client attached")
+            else
+                client = client[1]
+                client.config.settings = {
+                    ltex = {
+                        language = language
+                    }
+                }
+        client.notify('workspace/didChangeConfiguration', client.config.settings)
+        vim.notify("Language changed to " .. language)
+    end
+end, {
+    nargs = 1,
+    force = true,
+})
     -- configure lua server (with special settings)
     lspconfig["lua_ls"].setup({
       capabilities = capabilities,
