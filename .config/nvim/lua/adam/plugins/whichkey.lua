@@ -15,8 +15,13 @@ return {
                     m = { "<cmd>TermExec cmd='pandoc %:p -o %:p:r.md'<CR>"   , "markdown"},
                     h = { "<cmd>TermExec cmd='pandoc %:p -o %:p:r.html'<CR>" , "html"},
                     l = { "<cmd>TermExec cmd='pandoc %:p -o %:p:r.tex'<CR>"  , "latex"},
+                    p =  {
+                        name = "PDF",
+
                     p = { "<cmd>TermExec cmd='pandoc %:p -o %:p:r.pdf'<CR>"  , "pdf default engine"},
                     x = { "<cmd>TermExec cmd='pandoc --pdf-engine=xelatex %:p -o %:p:r.pdf'<CR>"  , "pdf xelatex engine"},
+                    h = { "<cmd>TermExec cmd='pandoc --pdf-engine=wkhtmltopdf %:p -o %:p:r.pdf'<CR>"  , "pdf xelatex engine"},
+                    },
                 },
                 k = {
                     name = "Gkeep2MD",
