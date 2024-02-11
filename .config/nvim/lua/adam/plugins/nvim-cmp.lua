@@ -17,38 +17,19 @@ return {
 
     local lspkind = require("lspkind")
 
-    require("luasnip.loaders.from_vscode").lazy_load({})
-    require("luasnip.loaders.from_vscode").lazy_load({ paths = './my_snippets' })
-    luasnip.filetype_extend("vimwiki", {"markdown"})
- local check_back_space = function()
-  local col = vim.fn.col('.') - 1
-  if col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') then
-    return true
-  else
-    return false
-  end
-end
---local function checkFMRI()
---    local buf_text = vim.api.nvim_buf_get_lines(0, 0, -1, false)
---    for _, line in ipairs(buf_text) do
---        if line:find("functional magnetic resonance imaging %(fMRI%)") then
---            return "fMRI"
---        end
---    end
---    return "functional magnetic resonance imaging (fMRI)"
---end
---
---luasnip.snippets = {
---    all = {
---        luasnip.parser.parse_snippet({
---            trig = "fmri",
---            name = "Prints 'functional magnetic resonance imaging (fMRI)' once; if already included, prints 'fMRI'",
---            dscr = "Prints 'functional magnetic resonance imaging (fMRI)' once in a file; if already included, prints 'fMRI'.",
---            wordTrig = false,
---            expanded = checkFMRI(),
---        }),
---    }
---}
+        local check_back_space = function()
+            local col = vim.fn.col('.') - 1
+            if col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') then
+                return true
+            else
+                return false
+            end
+        end
+        require("luasnip.loaders.from_vscode").lazy_load({})
+        require("luasnip.loaders.from_vscode").lazy_load({ paths = './my_snippets' })
+        require("luasnip.loaders.from_lua").lazy_load({ paths = './lua_snippets' })
+        vim.api.nvim_set_keymap('i', '<C-u>', '<cmd>lua require("luasnip.extras.select_choice")()<CR>', {noremap = true})
+        luasnip.filetype_extend("vimwiki", {"markdown"})
 cmp.setup({
       completion = {
         completeopt = "menu,menuone,preview,noselect",
@@ -79,6 +60,11 @@ cmp.setup({
             end, {'i', 's'}),
             ['<S-Tab>'] = cmp.mapping(function() luasnip.jump(-1) end, {'i', 's'}),
             }),
+            vim.keymap.set({ 'i', 's' }, '<C-s>', function()
+                if luasnip.expandable() then
+                    luasnip.expand({})
+                end
+            end),
       -- sources for autocompletion
       sources = cmp.config.sources({
         { name = "luasnip"}, -- snippets

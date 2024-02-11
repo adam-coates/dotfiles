@@ -19,13 +19,5 @@
         "prefix": "cl",
         "body": "claustrum",
         "description": "Type claustrum"
-    },
-    "Print fMRI": {
-    "prefix": "fmri",
-    "body": [
-        "${TM_SELECTED_TEXT/(functional magnetic resonance imaging \\(fMRI\\))/functional magnetic resonance imaging (fMRI)/i}",
-        "$0"
-    ],
-    "description": "Prints 'functional magnetic resonance imaging (fMRI)' only once in a file; if already included, prints 'fMRI'."
     }
 }
