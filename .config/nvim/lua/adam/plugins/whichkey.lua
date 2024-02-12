@@ -20,7 +20,7 @@ return {
 
                     p = { "<cmd>TermExec cmd='pandoc %:p -o %:p:r.pdf'<CR>"  , "pdf default engine"},
                     x = { "<cmd>TermExec cmd='pandoc --pdf-engine=xelatex %:p -o %:p:r.pdf'<CR>"  , "pdf xelatex engine"},
-                    h = { "<cmd>TermExec cmd='pandoc --pdf-engine=wkhtmltopdf %:p -o %:p:r.pdf'<CR>"  , "pdf xelatex engine"},
+                    h = { "<cmd>TermExec cmd='pandoc --pdf-engine=wkhtmltopdf %:p -o %:p:r.pdf'<CR>"  , "pdf wkhtmltopdf engine"},
                     z = { "<cmd>TermExec cmd='pandoc %:p -o %:p:r.pdf -F ~/.local/share/nvim/lazy/zotcite/python3/zotref.py --citeproc --csl ~/googledrive/notes/apa.csl'<CR>" , "Convert to pdf (zotref.py/apa.csl)" }
                     },
                 },
