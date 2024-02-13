@@ -36,6 +36,21 @@ local line_begin = require('luasnip.extras.expand_conditions').line_begin
 
 return {
     -- Pandoc-- Pandoc
+    s({ trig = 'ic', dscr = 'Indirect in-text citation' }, {
+    f(_G.LuaSnipConfig.intext_cite),
+    t('[-'),
+    f(_G.LuaSnipConfig.visual_selection),
+    t(']'),
+    i(0),
+    }),
+
+    s({ trig = 'wl', dscr = 'Wiki Link' }, {
+        t('[['),
+        f(_G.LuaSnipConfig.visual_selection),
+        i(1),
+        t(']]'),
+        i(0),
+    }),
     s(
         { trig = 'fm', dscr = 'Front matter' },
         fmta(
@@ -118,7 +133,13 @@ return {
  	        t("fMRI")
         }
         )
-    )
+    ),
+s("selected_text", f(function(args, snip)
+  local res, env = {}, snip.env
+  table.insert(res, "Selected Text (current line is " .. env.TM_LINE_NUMBER .. "):")
+  for _, ele in ipairs(env.LS_SELECT_RAW) do table.insert(res, ele) end
+  return res
+end, {}))
 }
 
 
