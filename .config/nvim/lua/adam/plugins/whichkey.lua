@@ -21,7 +21,8 @@ return {
                     p = { "<cmd>TermExec cmd='pandoc %:p -o %:p:r.pdf'<CR>"  , "pdf default engine"},
                     x = { "<cmd>TermExec cmd='pandoc --pdf-engine=xelatex %:p -o %:p:r.pdf'<CR>"  , "pdf xelatex engine"},
                     h = { "<cmd>TermExec cmd='pandoc --pdf-engine=wkhtmltopdf %:p -o %:p:r.pdf'<CR>"  , "pdf xelatex engine"},
-                    z = { "<cmd>TermExec cmd='pandoc %:p -o %:p:r.pdf -F ~/.local/share/nvim/lazy/zotcite/python3/zotref.py --citeproc --csl /mnt/g/apa.csl'<CR>" , "Convert to pdf (zotref.py/apa.csl)" }
+                    z = { "<cmd>TermExec cmd='pandoc %:p -o %:p:r.pdf -F ~/.local/share/nvim/lazy/zotcite/python3/zotref.py --citeproc --csl /mnt/g/apa.csl'<CR>" , "Convert to pdf (zotref.py/apa.csl)" },
+                    a = { "<cmd>TermExec cmd='bash ./test.sh %:p'<CR>" , "test"}
                     },
                 },
                 k = {
