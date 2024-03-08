@@ -11,11 +11,5 @@ elseif sysname == "Darwin" then
 else
     --vim.g.notepath = "change here for windows"
 end
--- Detect filetype and set it to markdown for GoogleKeepNote
---vim.api.nvim_exec([[
---  augroup GoogleKeepNoteMarkdown
---    autocmd!
---    autocmd FileType GoogleKeepNote setlocal filetype=markdown
---  augroup END
---]], false)
 
+vim.cmd("command! Test !python3 /home/adam/.config/nvim/test.py")

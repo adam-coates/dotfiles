@@ -106,7 +106,19 @@ return {
     lspconfig["marksman"].setup({
             capabilities = capabilities,
             on_attach = on_attach,
+            filetypes = { 'markdown', 'quarto' },
     })
+    lspconfig["r_language_server"].setup({
+        capabilities = capabilities,
+        on_attach = on_attach,
+        settings = {
+          r = {
+            lsp = {
+              rich_documentation = false,
+            },
+          },
+        },
+      })
     lspconfig["ltex"].setup({
            capabilities = capabilities,
            on_attach = on_attach,

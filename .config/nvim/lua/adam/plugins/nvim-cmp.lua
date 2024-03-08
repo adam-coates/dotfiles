@@ -121,6 +121,7 @@ cmp.setup({
         { name = "buffer" }, -- text within current buffer
         { name = "path" }, -- file system paths
         { name = "cmp_zotcite" },
+        { name = "otter" },
       }),
       -- configure lspkind for vs-code like pictograms in completion menu
       formatting = {
