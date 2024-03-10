@@ -14,7 +14,7 @@ return {
                 chunks = 'all',
                 diagnostics = {
                     enabled = true,
-                    triggers = { "BufWritePost" }
+                    triggers = { "TextChanged" }
                 },
                 completion = {
                     enabled = true
