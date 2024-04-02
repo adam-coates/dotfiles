@@ -22,46 +22,44 @@ return {
             return parent.snippet.env.LS_SELECT_DEDENT or {}
         end
 
+        function _G.LuaSnipConfig.intext_cite(_, parent)
+            local selected_text = parent.snippet.env.LS_SELECT_DEDENT or {}
+            local extracted_names = {}
 
-
-function _G.LuaSnipConfig.intext_cite(_, parent)
-    local selected_text = parent.snippet.env.LS_SELECT_DEDENT or {}
-    local extracted_names = {}
-
-    for _, text in ipairs(selected_text) do
-        -- Extract the portion of the text after #
-        local substring = text:match("#(.+)")
-        if substring then
+            for _, text in ipairs(selected_text) do
+            -- Extract the portion of the text after #
+                local substring = text:match("#(.+)")
+                if substring then
             -- Replace "Etal" or "Et al." with "et al."
-            substring = substring:gsub("_Etal_", " et al.,")
-            substring = substring:gsub("_Et al%.", " et al.,")
+                    substring = substring:gsub("_Etal_", " et al.,")
+                    substring = substring:gsub("_Et al%.", " et al.,")
             -- Remove any numbers after "et al."
-            substring = substring:gsub(" et al%..*", " et al.,")
+                    substring = substring:gsub(" et al%..*", " et al.,")
             -- Truncate at the last occurrence of a number
-            local truncated = substring:gsub("_%d+$", "")
+                    local truncated = substring:gsub("_%d+$", "")
             -- Split by underscores and add to extracted_names
-            local names = {}
-            for name in truncated:gmatch("([^_]+)") do
-                table.insert(names, name .. " ") -- Add a space at the end of each name
-            end
+                    local names = {}
+                    for name in truncated:gmatch("([^_]+)") do
+                        table.insert(names, name .. " ") -- Add a space at the end of each name
+                    end
             -- Check if "etal" is present
-            local has_etal = string.find(truncated, "etal")
+                    local has_etal = string.find(truncated, "etal")
             -- Concatenate names without "and" if "etal" is present
-            if has_etal then
-                table.insert(extracted_names, table.concat(names))
-            else
+                    if has_etal then
+                        table.insert(extracted_names, table.concat(names))
+                    else
                 -- Concatenate names with "and" if there are more than one
-                if #names > 1 then
-                    table.insert(extracted_names, table.concat(names, "and "))
-                else
-                    table.insert(extracted_names, names[1])
+                        if #names > 1 then
+                            table.insert(extracted_names, table.concat(names, "and "))
+                        else
+                            table.insert(extracted_names, names[1])
+                        end
+                    end
                 end
             end
-        end
-    end
 
-    return extracted_names
-end
+            return extracted_names
+        end
 
 
 
@@ -79,24 +77,25 @@ end
         require("luasnip").config.setup({store_selection_keys="<C-s>"})
         vim.api.nvim_set_keymap('i', '<C-u>', '<cmd>lua require("luasnip.extras.select_choice")()<CR>', {noremap = true})
         luasnip.filetype_extend("vimwiki", {"markdown"})
-cmp.setup({
-      completion = {
-        completeopt = "menu,menuone,preview,noselect",
-      },
-      snippet = { -- configure how nvim-cmp interacts with snippet engine
-        expand = function(args)
-          luasnip.lsp_expand(args.body)
-        end,
-      },
+
+        cmp.setup({
+            completion = {
+            completeopt = "menu,menuone,preview,noselect",
+            },
+            snippet = { -- configure how nvim-cmp interacts with snippet engine
+                expand = function(args)
+                    luasnip.lsp_expand(args.body)
+                end,
+            },
             mapping = cmp.mapping.preset.insert({
-        ["<C-k>"] = cmp.mapping.select_prev_item(), -- previous suggestion
-        ["<C-j>"] = cmp.mapping.select_next_item(), -- next suggestion
-        ["<C-b>"] = cmp.mapping.scroll_docs(-4),
-        ["<C-f>"] = cmp.mapping.scroll_docs(4),
-        ["<C-Space>"] = cmp.mapping.complete(), -- show completion suggestions
-        ["<C-e>"] = cmp.mapping.abort(), -- close completion window
-        ["<CR>"] = cmp.mapping.confirm({ select = false }),
-        ['<Tab>'] = cmp.mapping(function(fallback)
+            ["<C-k>"] = cmp.mapping.select_prev_item(), -- previous suggestion
+            ["<C-j>"] = cmp.mapping.select_next_item(), -- next suggestion
+            ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+            ["<C-f>"] = cmp.mapping.scroll_docs(4),
+            ["<C-Space>"] = cmp.mapping.complete(), -- show completion suggestions
+            ["<C-e>"] = cmp.mapping.abort(), -- close completion window
+            ["<CR>"] = cmp.mapping.confirm({ select = false }),
+            ['<Tab>'] = cmp.mapping(function(fallback)
                 if cmp.visible() then
                     cmp.confirm({select = true})
                 elseif luasnip.jumpable(1) then
