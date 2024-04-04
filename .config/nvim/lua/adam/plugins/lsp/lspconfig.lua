@@ -14,9 +14,12 @@ return {
 
     local keymap = vim.keymap -- for conciseness
 
-    local opts = { noremap = true, silent = true }
-    local on_attach = function(client, bufnr)
-      opts.buffer = bufnr
+  vim.api.nvim_create_autocmd("LspAttach", {
+    group = vim.api.nvim_create_augroup("UserLspConfig", {}),
+    callback = function(ev)
+     -- Buffer local mappings.
+     -- See `:help vim.lsp.*` for documentation on any of the below functions
+      local opts = { buffer = ev.buf, silent = true }
 
       -- set keybinds
       opts.desc = "Show LSP references"
@@ -57,7 +60,8 @@ return {
 
       opts.desc = "Restart LSP"
       keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
-    end
+    end,
+        })
 
     -- used to enable autocompletion (assign to every lsp server config)
     local capabilities = cmp_nvim_lsp.default_capabilities()
@@ -73,44 +77,44 @@ return {
     -- configure html server
     lspconfig["html"].setup({
       capabilities = capabilities,
-      on_attach = on_attach,
+--      on_attach = on_attach,
     })
 
     -- configure css server
     lspconfig["cssls"].setup({
       capabilities = capabilities,
-      on_attach = on_attach,
+--      on_attach = on_attach,
     })
 
     -- configure tailwindcss server
     lspconfig["tailwindcss"].setup({
       capabilities = capabilities,
-      on_attach = on_attach,
+--      on_attach = on_attach,
     })
 
     -- configure python server
     lspconfig["pyright"].setup({
       capabilities = capabilities,
-      on_attach = on_attach,
+--      on_attach = on_attach,
     })
     -- configure matlab server
     lspconfig["matlab_ls"].setup({
         capabilities = capabilities,
-        on_attach = on_attach,
+--        on_attach = on_attach,
     })
     -- configure bash server
     lspconfig["bashls"].setup({
         capabilities = capabilities,
-        on_attach = on_attach,
+--        on_attach = on_attach,
     })
     lspconfig["marksman"].setup({
             capabilities = capabilities,
-            on_attach = on_attach,
+--            on_attach = on_attach,
             filetypes = { 'markdown', 'quarto' },
     })
     lspconfig["r_language_server"].setup({
         capabilities = capabilities,
-        on_attach = on_attach,
+--        on_attach = on_attach,
         settings = {
           r = {
             lsp = {
@@ -121,7 +125,7 @@ return {
       })
     lspconfig["ltex"].setup({
            capabilities = capabilities,
-           on_attach = on_attach,
+--           on_attach = on_attach,
             settings = {
                 ltex = {
                     language = "en-GB",
@@ -151,7 +155,7 @@ end, {
     -- configure lua server (with special settings)
     lspconfig["lua_ls"].setup({
       capabilities = capabilities,
-      on_attach = on_attach,
+--      on_attach = on_attach,
       settings = { -- custom settings for lua
         Lua = {
           -- make the language server recognize "vim" global
