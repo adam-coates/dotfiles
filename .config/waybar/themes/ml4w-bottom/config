@@ -26,7 +26,7 @@
         "custom/appmenu",
         "group/links",
         "group/settings",
-        "wlr/taskbar",
+        //"wlr/taskbar",
         "group/quicklinks",
         "hyprland/window"
     ],
@@ -46,7 +46,8 @@
         "network",
         "group/hardware",
         "custom/cliphist",
-        "idle_inhibitor",
+        "custom/hypridle",
+        "custom/hyprshade",
         "tray",
         "custom/exit",
         "custom/ml4w-welcome",
