@@ -4,12 +4,11 @@ local opt = vim.opt
 opt.spelllang = "en_gb"
 opt.spell = true
 
-
 -- line numbers
 opt.relativenumber = true
 opt.number = true
 
--- tabs & indentation 
+-- tabs & indentation
 opt.tabstop = 4
 opt.shiftwidth = 4
 opt.expandtab = true
@@ -41,6 +40,15 @@ opt.splitright = true
 opt.splitbelow = true
 
 opt.iskeyword:append("-")
+
+-- leave 8 rows bottom and top while scrolling
+opt.scrolloff = 8
+
+-- undos saved
+opt.swapfile = false
+opt.backup = false
+opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
+opt.undofile = true
 
 --vim.opt.list = true
 --vim.opt.listchars = {
