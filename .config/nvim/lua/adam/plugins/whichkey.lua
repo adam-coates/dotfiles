@@ -85,6 +85,7 @@ return {
 		local insert_ojs_chunk = function()
 			insert_code_chunk("ojs")
 		end
+
 		wk.add({
 			{
 				{ "<leader><m-p>", ":split term://ipython<cr>", desc = "new [p]ython terminal" },
@@ -187,6 +188,19 @@ return {
 						vim.b.slime_config = { jobid = vim.g.slime_last_channel }
 					end,
 					desc = "set terminal",
+				},
+				{
+					"<leader>obc",
+					function()
+						vim.cmd.write()
+						print("Running...")
+						local obsidian_command =
+							'xdg-open "obsidian://advanced-uri?openmode=window&commandname=Zotero Integration: Import citation notes"'
+						obsidian_command = obsidian_command:gsub(" ", "\\ ")
+						local the_cmd = string.format([[TermExec cmd='%s']], obsidian_command)
+						vim.cmd(the_cmd)
+					end,
+					desc = "Create citation note",
 				},
 			},
 		})

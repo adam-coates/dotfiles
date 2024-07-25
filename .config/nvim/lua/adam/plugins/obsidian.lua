@@ -17,5 +17,9 @@ return {
 			},
 		},
 		open_notes_in = "vsplit",
+
+		templates = {
+			folder = "Templates",
+		},
 	},
 }
