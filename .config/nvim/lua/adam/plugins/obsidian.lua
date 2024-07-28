@@ -17,6 +17,8 @@ return {
 			},
 		},
 		open_notes_in = "vsplit",
+		disable_frontmatter = true,
+		ui = { enable = false },
 
 		templates = {
 			folder = "Templates",

@@ -79,7 +79,6 @@ return {
 			'<cmd>lua require("luasnip.extras.select_choice")()<CR>',
 			{ noremap = true }
 		)
-		luasnip.filetype_extend("vimwiki", { "markdown" })
 		luasnip.filetype_extend("quarto", { "markdown" })
 
 		cmp.setup({

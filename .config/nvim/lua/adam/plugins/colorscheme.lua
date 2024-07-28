@@ -234,6 +234,7 @@ return {
 						TSURI = { fg = colors.blue },
 						TSVariable = { fg = colors.text },
 						TSVariableBuiltin = { fg = colors.mauve },
+						TSMarkQuote = { fg = "#5a5078", style = { "bold" } },
 
 						["@annotation"] = { link = "TSAnnotation" },
 						["@attribute"] = { link = "TSAttribute" },
@@ -341,6 +342,7 @@ return {
 						["@lsp.type.type"] = { link = "TSType" },
 						["@lsp.type.typeParameter"] = { link = "TSTypeDefinition" },
 						["@lsp.type.variable"] = { link = "TSVariable" },
+						["@markup.quote"] = { link = "TSMarkQuote" },
 					}
 				end,
 				latte = function(colors)
