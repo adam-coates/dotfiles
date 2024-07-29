@@ -234,7 +234,7 @@ return {
 						TSURI = { fg = colors.blue },
 						TSVariable = { fg = colors.text },
 						TSVariableBuiltin = { fg = colors.mauve },
-						TSMarkQuote = { fg = "#5a5078", style = { "bold" } },
+						TSMarkQuote = { fg = "#9d84ba", style = { "bold" } },
 
 						["@annotation"] = { link = "TSAnnotation" },
 						["@attribute"] = { link = "TSAttribute" },
