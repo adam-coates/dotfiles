@@ -1,6 +1,8 @@
 require("adam.core")
 require("adam.lazy")
 require("custom_functions")
+package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?/init.lua"
+package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua"
 
 -- Create a key mapping to call the title function
 vim.api.nvim_set_keymap(
