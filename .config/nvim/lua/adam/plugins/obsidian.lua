@@ -16,7 +16,7 @@ return {
 				path = "~/notes",
 			},
 		},
-		open_notes_in = "vsplit",
+		--open_notes_in = "vsplit",
 		disable_frontmatter = true,
 		ui = { enable = false },
 
