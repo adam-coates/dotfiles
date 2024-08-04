@@ -22,6 +22,11 @@ return {
 
 		templates = {
 			folder = "Templates",
+			substitutions = {
+				citation_title = function()
+					vim.cmd("FindCitation")
+				end,
+			},
 		},
 	},
 }

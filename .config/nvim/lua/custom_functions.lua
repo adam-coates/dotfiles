@@ -29,6 +29,70 @@ M.citation_key = function()
 	end
 	return ""
 end
+
+M.title_with_prefix = function()
+	local title = M.get_title()
+	if title ~= "" then
+		-- Format the title with the prefix
+		local title_prefix = "> Title: "
+		local indent = "    "
+		local formatted_title = indent .. title
+		vim.api.nvim_put({ title_prefix }, "l", true, true)
+		vim.api.nvim_put({ "" }, "l", true, true)
+		vim.api.nvim_put({ formatted_title }, "l", true, true)
+		vim.api.nvim_put({ "" }, "l", true, true)
+	else
+		vim.api.nvim_err_writeln(title) -- Error message if title is empty
+	end
+end
+
+M.get_title = function()
+	local wrd = M.citation_key()
+	if wrd ~= "" then
+		local repl = vim.fn.py3eval('ZotCite.GetRefData("' .. wrd .. '")')
+		if not repl then
+			return "Citation key not found"
+		end
+		if repl.title then
+			return repl.title
+		else
+			return "No title found associated with article"
+		end
+	end
+	return ""
+end
+
+M.abstract_with_prefix = function()
+	local abstract = M.get_abstract()
+	if abstract ~= "" then
+		local abstract_prefix = "> Abstract: "
+		local indent = "    "
+		local formatted_abstract = indent .. abstract
+		vim.api.nvim_put({ abstract_prefix }, "l", true, true)
+		vim.api.nvim_put({ "" }, "l", true, true) -- Add an empty line to separate the title
+		vim.api.nvim_put({ formatted_abstract }, "l", true, true)
+		vim.api.nvim_put({ "" }, "l", true, true)
+	else
+		vim.api.nvim_err_writeln(abstract)
+	end
+end
+
+M.get_abstract = function()
+	local wrd = M.citation_key()
+	if wrd ~= "" then
+		local repl = vim.fn.py3eval('ZotCite.GetRefData("' .. wrd .. '")')
+		if not repl then
+			return "Citation key not found"
+		end
+		if repl.abstractNote then
+			return repl.abstractNote
+		else
+			return "No abstract found associated with article"
+		end
+	end
+	return ""
+end
+
 M.title = function()
 	local wrd = M.citation_key()
 	if wrd ~= "" then
@@ -44,14 +108,15 @@ M.title = function()
 		end
 	end
 end
-
 M.yaml_ref = function()
 	local wrd = M.citation_key()
 	if wrd ~= "" then
 		-- Fetch the YAML-formatted reference data using ZotCite
 		local repl = vim.fn.py3eval('ZotCite.GetYamlRefs(["' .. wrd .. '"])')
+		-- Remove the "references:" header and any leading spaces
 		repl = repl:gsub("^references:[\n\r]*", "")
-
+		-- Remove leading spaces from each line
+		repl = repl:gsub("^[ \t]+", "")
 		-- Check if the reference data is empty
 		if repl == "" then
 			vim.api.nvim_err_writeln("Citation key not found")
@@ -66,6 +131,79 @@ M.yaml_ref = function()
 		end
 	end
 end
+local getmach = function(key)
+	local citeptrn = key:gsub(" .*", "")
+	local refs = vim.fn.py3eval(
+		'ZotCite.GetMatch("' .. citeptrn .. '", "' .. vim.fn.escape(vim.fn.expand("%:p"), "\\") .. '", True)'
+	)
+	local resp = {}
+	for _, v in pairs(refs) do
+		local item = {
+			key = v.zotkey,
+			author = v.alastnm,
+			year = v.year,
+			ttl = v.title,
+		}
+		table.insert(resp, item)
+	end
+	if #resp == 0 then
+		vim.schedule(function()
+			vim.api.nvim_echo({ { "No matches found." } }, false, {})
+		end)
+	end
+	return resp
+end
+
+local tbl_indexof = function(tbl, value)
+	for i, v in ipairs(tbl) do
+		if v == value then
+			return i
+		end
+	end
+	return nil
+end
+local sel_list = {} -- Ensure sel_list is a global variable or accessible in the required scope
+
+-- Function to get matching citations
+local FindCitationKey = function(str, cb)
+	local mtchs = getmach(str)
+	if #mtchs == 0 then
+		return
+	end
+	local opts = {}
+	sel_list = {} -- Clear previous selection list
+	for _, v in pairs(mtchs) do
+		table.insert(opts, v.author .. " (" .. v.year .. ") " .. v.ttl)
+		table.insert(sel_list, v.key)
+	end
+	vim.schedule(function()
+		vim.ui.select(opts, { prompt = "Select a citation:" }, function(choice)
+			if choice then
+				-- Find the index of the selected choice using the custom tbl_indexof function
+				local selected_index = tbl_indexof(opts, choice)
+				if selected_index then
+					M.citation_key = function()
+						return sel_list[selected_index]
+					end
+					M.yaml_ref()
+					M.title_with_prefix()
+					M.abstract_with_prefix()
+				end
+			end
+		end)
+	end)
+end
+-- Create the FindCitation user command
+vim.api.nvim_create_user_command("FindCitation", function()
+	-- Prompt the user for input
+	vim.ui.input({ prompt = "Enter citation query: " }, function(input)
+		if input then
+			FindCitationKey(input, function()
+				-- No additional processing needed here, as selection is handled within FindCitationKey
+			end)
+		end
+	end)
+end, { nargs = 0 })
 
 local obsidian = require("obsidian")
 
