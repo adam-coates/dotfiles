@@ -1,5 +1,7 @@
-#!/opt/homebrew/Cellar/python@3.11/3.11.8/bin/python3.11
+#!/opt/homebrew/opt/python@3.11/libexec/bin/python
+
 import speedtest
+
 
 def perform_speed_test():
    st = speedtest.Speedtest()

@@ -1,4 +1,4 @@
-#!/opt/homebrew/Cellar/python@3.11/3.11.8/bin/python3.11
+#!/opt/homebrew/opt/python@3.11/libexec/bin/python
 import psutil
 
 # Getting % usage of virtual_memory (3rd field)
