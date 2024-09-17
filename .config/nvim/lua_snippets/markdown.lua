@@ -40,6 +40,7 @@ end
 --end
 
 return {
+	-- Pandoc-- Pandoc
 	s({ trig = "ic", dscr = "Indirect in-text citation" }, {
 		f(_G.LuaSnipConfig.intext_cite),
 		t("[-"),
@@ -76,7 +77,6 @@ return {
 		),
 		{ condition = line_begin }
 	),
-
 	s(
 		{ trig = "(%d)x(%d)", regTrig = true, dscr = "Rows x columns" },
 		fmta(
@@ -129,15 +129,17 @@ return {
               location: "<>"
               description: "<>"
               timezone: "<>"
+              color: <>
             ---
             ]],
 			{
 				i(1), -- Summary placeholder
-				t(get_current_datetime(0)), -- Current date and time for start
-				t(get_current_datetime(1)), -- Current date and time + 1 hour for end
-				i(2), -- Location placeholder
-				i(3), -- Description placeholder
-				i(4, "CET"), -- Timezone placeholder (default to UTC)
+				i(2, get_current_datetime(0)), -- Current date and time for start
+				i(3, get_current_datetime(1)), -- Current date and time + 1 hour for end
+				i(4), -- Location placeholder
+				i(5), -- Description placeholder
+				i(6, "CET"), -- Timezone placeholder (default to UTC)
+				i(7, "7"),
 			}
 		)
 	),

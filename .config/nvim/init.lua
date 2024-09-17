@@ -1,6 +1,8 @@
 require("adam.core")
 require("adam.lazy")
 require("custom_functions")
+package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?/init.lua"
+package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua"
 
 -- Create a key mapping to call the title function
 vim.api.nvim_set_keymap(
@@ -15,9 +17,7 @@ vim.api.nvim_set_keymap(
 	':lua require("custom_functions").yaml_ref()<CR>',
 	{ noremap = true, silent = true }
 )
-
-vim.g.python3_host_prog = "C:/Users/coates/Desktop/python3.exe"
-vim.g.python_host_prog = "C:/Users/coates/Pyportable-2.7.10rc1/python.exe"
+vim.g.python3_host_prog = "/home/adam/.pyenv/shims/python3"
 
 -- function to renmae buffer to the currently selected highlighted text
 local function rename_buffer_from_selection()
@@ -53,5 +53,5 @@ vim.api.nvim_create_user_command("AddGoogleEvent", function()
 	local file_path = vim.fn.expand("%:p")
 
 	-- Execute the Python script with the file path as an argument
-	vim.cmd("!py C:\\Users\\coates\\add_event.py " .. file_path)
+	vim.cmd("! /home/adam/.pyenv/shims/python3 /home/adam/scripts/add_event.py " .. file_path)
 end, {})

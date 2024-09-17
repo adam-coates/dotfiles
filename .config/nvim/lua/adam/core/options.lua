@@ -47,7 +47,7 @@ opt.scrolloff = 8
 -- undos saved
 opt.swapfile = false
 opt.backup = false
-opt.undodir = "C:/Users/coates/.vim/undodir"
+opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
 opt.undofile = true
 
 vim.g.markdown_folding = 1
