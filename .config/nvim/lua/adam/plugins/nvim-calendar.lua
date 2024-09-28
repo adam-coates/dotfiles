@@ -1,6 +1,6 @@
 return {
-	"adam-coates/nvim-calendar-add",
+	"adam-coates/nvim-calendar",
 	config = function()
-		require("google_event_plugin")
+		require("nvim-calendar")
 	end,
 }
