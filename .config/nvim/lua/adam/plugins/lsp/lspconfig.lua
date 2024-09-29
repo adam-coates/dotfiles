@@ -123,11 +123,21 @@ return {
 				},
 			},
 		})
-		--		lspconfig["ltex"].setup({
-		--			capabilities = capabilities,
-		--			--           on_attach = on_attach,
-		--		})
-		-- configure lua server (with special settings)
+		lspconfig["ltex"].setup({
+			capabilities = capabilities,
+			settings = {
+				ltex = {
+					language = "en-US",
+					languageModel = "~/models/ngrams/",
+					disabledRules = {
+						["en-US"] = {
+							"MORFOLOGIK_RULE_EN_US",
+						},
+					},
+				},
+			},
+		})
+
 		lspconfig["harper_ls"].setup({
 			capabilities = capabilities,
 			settings = {
@@ -145,10 +155,9 @@ return {
 			init_options = {
 				configPath = "/Users/adam/.config/vale/vale.ini",
 				installVale = true,
-				syncOnStartup = true,
-            },
-			-- FIX https://github.com/errata-ai/vale-ls/issues/4
-            cmd_env = { VALE_CONFIG_PATH = "/Users/adam/.config/vale/vale.ini" },
+				syncOnStartup = false,
+			},
+			cmd_env = { VALE_CONFIG_PATH = "/Users/adam/.config/vale/vale.ini" },
 		})
 		lspconfig["lua_ls"].setup({
 			capabilities = capabilities,
