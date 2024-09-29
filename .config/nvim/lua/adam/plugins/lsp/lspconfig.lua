@@ -140,6 +140,16 @@ return {
 			},
 			filetypes = { "markdown" },
 		})
+		lspconfig["vale_ls"].setup({
+			capabilities = capabilities,
+			init_options = {
+				configPath = "/Users/adam/.config/vale/vale.ini",
+				installVale = true,
+				syncOnStartup = true,
+            },
+			-- FIX https://github.com/errata-ai/vale-ls/issues/4
+            cmd_env = { VALE_CONFIG_PATH = "/Users/adam/.config/vale/vale.ini" },
+		})
 		lspconfig["lua_ls"].setup({
 			capabilities = capabilities,
 			--      on_attach = on_attach,
