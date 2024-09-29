@@ -53,5 +53,7 @@ vim.api.nvim_create_user_command("AddGoogleEvent", function()
 	local file_path = vim.fn.expand("%:p")
 
 	-- Execute the Python script with the file path as an argument
-	vim.cmd("! /home/adam/.pyenv/shims/python3 /home/adam/scripts/add_event.py " .. file_path)
+	vim.cmd("! /Users/adam/.pyenv/shims/python3 /Users/adam/.local/share/nvim/lazy/nvim-calendar/python/add_event.py " .. file_path)
 end, {})
+
+

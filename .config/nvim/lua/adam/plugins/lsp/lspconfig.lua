@@ -130,6 +130,14 @@ return {
 		-- configure lua server (with special settings)
 		lspconfig["harper_ls"].setup({
 			capabilities = capabilities,
+			settings = {
+				["harper-ls"] = {
+					userDictPath = "~/.config/nvim/spell/en.utf-8.add",
+					linters = {
+						spell_check = false,
+					},
+				},
+			},
 			filetypes = { "markdown" },
 		})
 		lspconfig["lua_ls"].setup({
