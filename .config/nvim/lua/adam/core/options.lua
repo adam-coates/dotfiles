@@ -50,7 +50,7 @@ opt.backup = false
 opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
 opt.undofile = true
 
-vim.g.markdown_folding = 1
+-- vim.g.markdown_folding = 1
 
 --vim.opt.list = true
 --vim.opt.listchars = {
