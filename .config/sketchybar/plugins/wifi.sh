@@ -4,17 +4,16 @@ update() {
   source "$CONFIG_DIR/icons.sh"
   #CURRENT_WIFI="$(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I)"
   #SSID="$(echo "$CURRENT_WIFI" | grep -o "SSID: .*" | sed 's/^SSID: //')"
-  SSID="$(networksetup -listallhardwareports | awk '/Wi-Fi/{getline; print $2}' | xargs networksetup -getairportnetwork | sed "s/Current Wi-Fi Network: //")"
+  SSID="$(ipconfig getsummary en0 | awk -F ' SSID : '  '/ SSID : / {print $2}')"
   #SSID="$(/System/Library/PrivateFrameworks/Apple80211.framework/Resources/airport -I | awk -F ' SSID: '  '/ SSID: / {print $2}')"
   #IP="$(ipconfig getifaddr en0)"
   #CURR_TX="$(echo "$CURRENT_WIFI" | grep -o "lastTxRate: .*" | sed 's/^lastTxRate: //')"
 
-down=$(/Users/adam/.config/sketchybar/plugins/get_down.py)
 
 
 if [ -n "$SSID" ] || [ ${#SSID} -gt 1 ]; then
     ICON="$WIFI_CONNECTED"
-    LABEL=$(echo "$SSID ($down)")
+    LABEL=$(echo "$SSID")
 fi
 
 if [ ${#SSID} -gt 30 ]; then
