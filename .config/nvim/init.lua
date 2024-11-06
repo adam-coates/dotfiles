@@ -4,6 +4,7 @@ require("custom_functions")
 package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?/init.lua"
 package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua"
 
+
 -- Create a key mapping to call the title function
 vim.api.nvim_set_keymap(
 	"n",
@@ -17,7 +18,7 @@ vim.api.nvim_set_keymap(
 	':lua require("custom_functions").yaml_ref()<CR>',
 	{ noremap = true, silent = true }
 )
-vim.g.python3_host_prog = "/Users/adam/.pyenv/shims/python3"
+vim.g.python3_host_prog = "/home/adam/.pyenv/versions/py3/bin/python3"
 
 -- function to renmae buffer to the currently selected highlighted text
 local function rename_buffer_from_selection()
@@ -44,6 +45,15 @@ vim.api.nvim_set_keymap(
 	[[:<C-u>lua _G.rename_buffer_from_selection()<CR>]],
 	{ noremap = true, silent = true }
 )
+
+local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
+vim.api.nvim_create_autocmd('TextYankPost', {
+  callback = function()
+    vim.highlight.on_yank()
+  end,
+  group = highlight_group,
+  pattern = '*',
+})
 
 vim.api.nvim_create_user_command("AddGoogleEvent", function()
 	-- Save the current buffer

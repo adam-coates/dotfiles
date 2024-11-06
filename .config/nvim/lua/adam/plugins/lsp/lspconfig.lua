@@ -137,20 +137,7 @@ return {
 				},
 			},
 		})
-
-		lspconfig["harper_ls"].setup({
-			capabilities = capabilities,
-			settings = {
-				["harper-ls"] = {
-					userDictPath = "~/.config/nvim/spell/en.utf-8.add",
-					linters = {
-						spell_check = false,
-					},
-				},
-			},
-			filetypes = { "markdown" },
-		})
-		lspconfig["vale_ls"].setup({
+        lspconfig["vale_ls"].setup({
 			capabilities = capabilities,
 			init_options = {
 				configPath = "/Users/adam/.config/vale/vale.ini",

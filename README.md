@@ -1,8 +1,18 @@
-Arch related dotfiles adapted from: https://github.com/mylinuxforwork/dotfiles
+
+Arch related dotfiles adapted from: https://github.com/mylinuxforwork/dotfiles see branch `old_macOS_mylinuxforwork`
+
+- Most recent arch dotfiles are now in their own repo [archdotfiles](https://github.com/adam-coates/archdotfiles)
+
+- Repo here is specifically for use for either macOS and using neovim on windows 
 
 
-- Current setup works on macOS so need to check paths on Linux 
-    e.g. `/Users/adam/` = `/home/adam/`
+- Current setup works on macOS so need to check paths on windows!! 
+    e.g. `/Users/adam/` (macOS) = `C:/Users/*name*` (windows)
+    e.g. `~/.config` (macOS) = `C:/Users/*name*/AppData/local` (windows)
+
+
+- For windows the installation will involve extra tinkering and likely the removal of some plugins (e.g. image.lua)
+
 
 
 - Ngram database downloaded from here: 
@@ -11,10 +21,6 @@ Arch related dotfiles adapted from: https://github.com/mylinuxforwork/dotfiles
 - Current set-up for writing notes uses a mixture of the following: 
     - Native nvim spell checking
     - Vale - for grammar checking 
-    - Harper - for grammar checking 
+    - ~~Harper - for grammar checking~~ (removed harper as its bloat. May switch back to since ltex-ls uses quite some resources)
     - Ltexls - for grammar checking (and some spelling) 
 
-- TODO: 
-
-    - Refine the language tools setup 
-        -  Using too many tools right now, I think it's best to stick to one and/ or create rules to prevent overlapping diagnostics 

@@ -38,7 +38,6 @@ return {
 				"ltex",
 				"r_language_server",
 				"clangd",
-				--"harper_ls",
 			},
 			-- auto-install configured servers (with lspconfig)
 			automatic_installation = true, -- not the same as ensure_installed
