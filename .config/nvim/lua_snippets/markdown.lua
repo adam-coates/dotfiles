@@ -77,6 +77,27 @@ return {
 		),
 		{ condition = line_begin }
 	),
+    s(
+		{ trig = "fm", dscr = "Front matter for notes" },
+		fmta(
+			[[
+                ---
+                title: <>
+                tags: []
+                date: <>
+                ---
+
+                # <>
+            ]],
+			{
+				i(1),
+				p(os.date, "%d/%m/%Y"),
+                i(2),
+			}
+		),
+		{ condition = line_begin }
+	),
+
 	s(
 		{ trig = "(%d)x(%d)", regTrig = true, dscr = "Rows x columns" },
 		fmta(

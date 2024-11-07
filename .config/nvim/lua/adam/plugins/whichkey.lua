@@ -189,20 +189,7 @@ return {
 					end,
 					desc = "set terminal",
 				},
-				{
-					"<leader>obc",
-					function()
-						vim.cmd.write()
-						print("Running...")
-						local obsidian_command =
-							'xdg-open "obsidian://advanced-uri?openmode=window&commandname=Zotero Integration: Import citation notes"'
-						obsidian_command = obsidian_command:gsub(" ", "\\ ")
-						local the_cmd = string.format([[TermExec cmd='%s']], obsidian_command)
-						vim.cmd(the_cmd)
-					end,
-					desc = "Create citation note",
-				},
-			},
+            },
 		})
 	end,
 }

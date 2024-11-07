@@ -21,24 +21,37 @@ vim.api.nvim_set_keymap(
 vim.g.python3_host_prog = "/home/adam/.pyenv/versions/py3/bin/python3"
 
 -- function to renmae buffer to the currently selected highlighted text
-local function rename_buffer_from_selection()
-	local start_pos = vim.fn.getpos("'<")
-	local end_pos = vim.fn.getpos("'>")
+function _G.rename_buffer_from_selection()
+    -- Get the range of selected text in visual mode
+    local start_pos = vim.fn.getpos("'<")
+    local end_pos = vim.fn.getpos("'>")
 
-	local lines = vim.api.nvim_buf_get_lines(0, start_pos[2] - 1, end_pos[2], false)
+    local start_line, start_col = start_pos[2], start_pos[3]
+    local end_line, end_col = end_pos[2], end_pos[3]
 
-	local new_name = table.concat(lines, " ")
+    -- Ensure only one line is selected
+    if start_line ~= end_line then
+        print("Selection spans multiple lines. Only single-line selection is allowed.")
+        return
+    end
 
-	new_name = new_name .. ".md"
+    -- Get the selected text in the current buffer
+    local current_line = vim.fn.getline(start_line)
+    local selected_text = string.sub(current_line, start_col, end_col)
 
-	vim.api.nvim_buf_set_name(0, new_name)
-	print("Buffer renamed to: " .. new_name)
+    -- Trim whitespace and add ".md" extension for renaming
+    selected_text = vim.trim(selected_text) .. ".md"
+
+    -- Rename the buffer (and file) if it's a real file
+    local current_path = vim.api.nvim_buf_get_name(0)
+    if current_path ~= "" then
+        local new_path = vim.fn.fnamemodify(current_path, ":h") .. "/" .. selected_text
+        vim.cmd("file " .. new_path)
+        print("Renamed buffer to " .. new_path)
+    else
+        print("Buffer is not associated with a file.")
+    end
 end
-
-vim.api.nvim_create_user_command("RenameBufferFromSelection", rename_buffer_from_selection, { range = true })
-
-_G.rename_buffer_from_selection = rename_buffer_from_selection
-
 vim.api.nvim_set_keymap(
 	"v",
 	"<leader>rrr",

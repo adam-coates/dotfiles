@@ -361,17 +361,11 @@ return {
 		end,
 	},
 	{
-		"michaeldyrynda/carbon",
-		config = function()
-			-- vim.cmd("colorscheme carbon")
-		end,
-	},
-	{
 		"sainnhe/gruvbox-material",
 		enabled = true,
 		priority = 1000,
 		config = function()
-			vim.g.gruvbox_material_transparent_background = 0
+			vim.g.gruvbox_material_transparent_background = true
 			vim.g.gruvbox_material_foreground = "mix"
 			vim.g.gruvbox_material_background = "hard" -- soft, medium, hard
 			vim.g.gruvbox_material_ui_contrast = "high" -- The contrast of line numbers, indent lines, etc.
