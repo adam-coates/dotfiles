@@ -27,5 +27,29 @@ keymap.set("n", "<C-u>", "<C-u>zz")
 
 keymap.set("x", "p", "\"_dP")
 
-keymap.set("n", "<leader>on", ":ObsidianTemplate note<cr> :lua vim.cmd([[1,/^\\S/s/^\\n\\{1,}//]])<cr>", { desc = "Obsidian template note" })
-keymap.set("n", "<leader>of", ":s/\\(# \\)[^_]*_/\\1/ | s/-/ /g<cr>", { desc = "Remove all underscores and  data from text" })
+keymap.set("n", "<leader>on", function()
+  if vim.fn.bufname('%') == '' and vim.fn.line('$') == 1 and vim.fn.getline(1) == '' then
+    local title = vim.fn.input("Enter note title: ")
+    if title == "" then
+      print("Title cannot be empty!")
+      return
+    end
+
+    local dir = vim.fn.expand("~/notes/Inbox/")
+    local filename = dir .. title:gsub("%s+", "_") .. ".md"
+
+    vim.fn.mkdir(dir, "p")
+
+    vim.cmd("edit " .. filename)
+
+    vim.cmd("write")
+  end
+
+  local original_cwd = vim.fn.getcwd()
+
+  vim.cmd("cd ~/notes")
+
+  vim.cmd(":ObsidianTemplate note")
+
+  vim.cmd("cd " .. original_cwd)
+end, { desc = "Create Obsidian note with template" })

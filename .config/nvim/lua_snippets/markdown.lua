@@ -78,12 +78,13 @@ return {
 		{ condition = line_begin }
 	),
     s(
-		{ trig = "fm", dscr = "Front matter for notes" },
+		{ trig = "fmn", dscr = "Front matter for notes" },
 		fmta(
 			[[
                 ---
                 title: <>
-                tags: []
+                tags:
+                  - <>
                 date: <>
                 ---
 
@@ -91,8 +92,9 @@ return {
             ]],
 			{
 				i(1),
-				p(os.date, "%d/%m/%Y"),
                 i(2),
+				p(os.date, "%d/%m/%Y"),
+                i(3),
 			}
 		),
 		{ condition = line_begin }
