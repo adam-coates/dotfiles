@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Enhanced menu function with color support
+
 menu() {
     local prompt="$1" outvar="$2" selected_outvar="$3"
     shift 3
@@ -54,10 +55,20 @@ menu() {
             # Show preview of the selected note using 'bat'
             local selected_note="${options[$cur]}"
             local note_path="$notes_dir/$selected_note"
-            echo -e "\nPreviewing note: $selected_note"
-            bat "$note_path"  # Show the content of the selected note with 'bat'
+
+            # Save the cursor position
+            tput sc
+
+            echo -e "\nPreviewing note: $selected_note\n"
+            bat --paging=never --line-range :100 --color=always "$note_path"  # Show the content of the selected note with 'bat'
+
             echo -e "\nPress any key to continue..."
             read -rsn1 # Wait for user to press a key to continue
+
+            # Restore the cursor position and clear the preview
+            tput rc
+            tput ed
+
         elif [[ $key == "" ]]; then
             break
         fi
