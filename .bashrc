@@ -1,55 +1,39 @@
-#    _               _              
-#   | |__   __ _ ___| |__  _ __ ___ 
-#   | '_ \ / _` / __| '_ \| '__/ __|
-#  _| |_) | (_| \__ \ | | | | | (__ 
-# (_)_.__/ \__,_|___/_| |_|_|  \___|
-# 
 # -----------------------------------------------------
-# ~/.bashrc
+# Exports
 # -----------------------------------------------------
-
-# If not running interactively, don't do anything
-[[ $- != *i* ]] && return
-PS1='[\u@\h \W]\$ '
-
-# Define Editor
 export EDITOR=nvim
+export PATH="/usr/lib/ccache/bin/:$PATH"
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH=$PATH:~/.local/bin
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH=$BUN_INSTALL/bin:$PATH
+export PATH=~/.npm-global/bin:$PATH
+export PATH="/home/adam/psychopy_2024.2.4_py3.10/.bin:$PATH"
 
 # -----------------------------------------------------
 # ALIASES
 # -----------------------------------------------------
-
+alias univpn='~/scripts/univpn.sh'
+alias x2go=~/scripts/startx2go.sh
+alias watchsensors="watch -n 1 -d sensors"
+alias on=~/scripts/on
+alias sort_inbox=~/scripts/sort_inbox.sh
+# -----------------------------------------------------
+# General
+# -----------------------------------------------------
 alias c='clear'
 alias nf='fastfetch'
 alias pf='fastfetch'
+alias ff='fastfetch'
 alias ls='eza -a --icons'
 alias ll='eza -al --icons'
 alias lt='eza -a --tree --level=1 --icons'
-alias shutdown='systemctl poweroff'
-alias v='$EDITOR'
-alias vim='$EDITOR'
-alias ts='~/dotfiles/scripts/snapshot.sh'
-alias matrix='cmatrix'
-alias wifi='nmtui'
-alias od='~/private/onedrive.sh'
-alias rw='~/dotfiles/waybar/reload.sh'
-alias winclass="xprop | grep 'CLASS'"
-alias dot="cd ~/dotfiles"
-alias cleanup='~/dotfiles/scripts/cleanup.sh'
-alias ml4w='~/dotfiles/apps/ML4W_Welcome-x86_64.AppImage'
-alias ml4w-settings='~/dotfiles/apps/ML4W_Dotfiles_Settings-x86_64.AppImage'
 
 # -----------------------------------------------------
-# Window Managers
+# Git
 # -----------------------------------------------------
-
-alias Qtile='startx'
-# Hyprland with Hyprland
-
-# -----------------------------------------------------
-# GIT
-# -----------------------------------------------------
-
 alias gs="git status"
 alias ga="git add"
 alias gc="git commit -m"
@@ -61,88 +45,8 @@ alias gcheck="git checkout"
 alias gcredential="git config credential.helper store"
 
 # -----------------------------------------------------
-# SCRIPTS
+# CUSTOMIZATION
 # -----------------------------------------------------
-
-alias gr='python ~/dotfiles/scripts/growthrate.py'
-alias ChatGPT='python ~/mychatgpt/mychatgpt.py'
-alias chat='python ~/mychatgpt/mychatgpt.py'
-alias ascii='~/dotfiles/scripts/figlet.sh'
-alias univpn='~/scripts/univpn.sh'
-
-# -----------------------------------------------------
-# VIRTUAL MACHINE
-# -----------------------------------------------------
-
-alias vm='~/private/launchvm.sh'
-alias lg='~/dotfiles/scripts/looking-glass.sh'
-
-# -----------------------------------------------------
-# EDIT CONFIG FILES
-# -----------------------------------------------------
-
-alias confq='$EDITOR ~/dotfiles/qtile/config.py'
-alias confp='$EDITOR ~/dotfiles/picom/picom.conf'
-alias confb='$EDITOR ~/dotfiles/.bashrc'
-
-# -----------------------------------------------------
-# EDIT NOTES
-# -----------------------------------------------------
-
-alias notes='$EDITOR ~/notes.txt'
-
-# -----------------------------------------------------
-# SYSTEM
-# -----------------------------------------------------
-
-alias update-grub='sudo grub-mkconfig -o /boot/grub/grub.cfg'
-alias setkb='setxkbmap de;echo "Keyboard set back to de."'
-
-# -----------------------------------------------------
-# SCREEN RESOLUTINS
-# -----------------------------------------------------
-
-# Qtile
-alias res1='xrandr --output DisplayPort-0 --mode 2560x1440 --rate 120'
-alias res2='xrandr --output DisplayPort-0 --mode 1920x1080 --rate 120'
-
-
-
-export PATH="/usr/lib/ccache/bin/:$PATH"
-
-# -----------------------------------------------------
-# DEVELOPMENT
-# -----------------------------------------------------
-alias dotsync="~/dotfiles-versions/dotfiles/.dev/sync.sh dotfiles"
-alias watchsensors="watch -n 1 -d sensors"
-
-alias x2go=~/scripts/startx2go.sh
-
-# -----------------------------------------------------
-# START STARSHIP
-# -----------------------------------------------------
-eval "$(starship init bash)"
-
-# -----------------------------------------------------
-# PYWAL
-# -----------------------------------------------------
-cat ~/.cache/wal/sequences
-
-# -----------------------------------------------------
-# PFETCH if on wm
-# -----------------------------------------------------
-echo ""
-if [[ $(tty) == *"pts"* ]]; then
-    fastfetch
-else
-    if [ -f /bin/qtile ]; then
-        echo "Start Qtile X11 with command Qtile"
-    fi
-    if [ -f /bin/hyprctl ]; then
-        echo "Start Hyprland with command Hyprland"
-    fi
-fi
-
 bind -f  ~/.inputrc
 bind 'set show-all-if-ambiguous on'
 bind 'TAB:menu-complete'
@@ -170,7 +74,7 @@ _fzf_compgen_dir() {
 }
 
 # bat theeme ]
-export BAT_THEME='Everforest Dark'
+export BAT_THEME='gruvbox-dark'
 
 # ---- Eza (better ls) -----
 
@@ -196,13 +100,22 @@ _fzf_comprun() {
   esac
 }
 
-#pyenv 
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+# -----------------------------------------------------
+# Starship Prompt
+# -----------------------------------------------------
+eval "$(starship init bash)"
+
+# -----------------------------------------------------
+# Fastfetch
+# -----------------------------------------------------
+if [[ $(tty) == *"pts"* ]]; then
+    fastfetch --config examples/13
+fi
+
+
+eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 
 
-# ai 
-alias webui="/home/adam/scripts/webui.sh"
-alias localai="/home/adam/scripts/local-ai-Linux-x86_64"
+. "$HOME/.cargo/env"

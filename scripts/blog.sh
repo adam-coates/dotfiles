@@ -7,6 +7,12 @@ red='\e[31m'
 purple='\033[0;35m'
 clear='\e[0m'
 
+bkplct=/mnt/g/blog/
+
+if [ ! -d $bkplct ];then
+    bkplct=/mnt/g/notes/blog/
+fi
+
 ColorGreen(){
     echo -ne $green$1$clear
 }
@@ -138,7 +144,7 @@ case "$1" in
     backup)
 
         echo -ne "$(ColorRed 'Backing up now ... ')"; echo ""
-        spinner cp -rf  ~/adam-coates.github.io/ /mnt/g/blog/
+        spinner cp -rf  ~/adam-coates.github.io/ $bkplct
         echo -ne "$(ColorGreen 'Files now backed up \u2714')"; echo ""
         ;;
 
@@ -172,7 +178,7 @@ if [[ $check == "yes" || $check == "y" ]]; then
     echo -ne "$(ColorPurple 'Checking if needing to back up ')"; spinner sleep 5; echo -ne "$(ColorGreen '\u2714')"; echo ""
     if ! check_directories $blogdir /mnt/g/blog/adam-coates.github.io/posts/; then
         echo -ne "$(ColorRed 'Different files detected backing up now ... ')"; echo ""
-        spinner cp -rf  ~/adam-coates.github.io/ /mnt/g/blog/
+        spinner cp -rf  ~/adam-coates.github.io/ $bkplct
         echo -ne "$(ColorGreen 'Files now backed up \u2714')"; echo ""
     else
         echo ""
