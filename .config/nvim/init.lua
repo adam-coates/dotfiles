@@ -68,15 +68,3 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   pattern = '*',
 })
 
-vim.api.nvim_create_user_command("AddGoogleEvent", function()
-	-- Save the current buffer
-	vim.cmd("write")
-
-	-- Get the full path of the current buffer
-	local file_path = vim.fn.expand("%:p")
-
-	-- Execute the Python script with the file path as an argument
-	vim.cmd("! /Users/adam/.pyenv/shims/python3 /Users/adam/.local/share/nvim/lazy/nvim-calendar/python/add_event.py " .. file_path)
-end, {})
-
-
