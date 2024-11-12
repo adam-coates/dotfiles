@@ -27,6 +27,10 @@ keymap.set("n", "<C-u>", "<C-u>zz")
 
 keymap.set("x", "p", "\"_dP")
 
+-- move selected liens up or down 
+keymap.set("v", "J", ":m '>+1<CR>gv=gv")
+keymap.set("v", "K", ":m '<-2<CR>gv=gv")
+
 keymap.set("n", "<leader>on", function()
   if vim.fn.bufname('%') == '' and vim.fn.line('$') == 1 and vim.fn.getline(1) == '' then
     local title = vim.fn.input("Enter note title: ")

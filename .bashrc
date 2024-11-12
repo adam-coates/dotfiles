@@ -12,6 +12,8 @@ export PATH=$BUN_INSTALL/bin:$PATH
 export PATH=~/.npm-global/bin:$PATH
 export PATH="/home/adam/psychopy_2024.2.4_py3.10/.bin:$PATH"
 
+export TODOIST_API_KEY="$(pass Todoist/API)"
+
 # -----------------------------------------------------
 # ALIASES
 # -----------------------------------------------------
