@@ -9,7 +9,7 @@ return {
 		require("zen-mode").setup({
 			window = {
 				backdrop = 0.95,
-				width = 80, -- width of the Zen window
+				width = 180, -- width of the Zen window
 				height = 1, -- height of the Zen window
 				options = {
 					signcolumn = "no", -- disable signcolumn
@@ -21,6 +21,9 @@ return {
 					-- list = false, -- disable whitespace characters
 				},
 			},
+            plugins = {
+                twilight = { enabled = false }
+            },
 		})
 		require("twilight").setup({
 			dimming = {
