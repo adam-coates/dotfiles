@@ -67,7 +67,7 @@ return {
 						crust = "#141617",
 					},
 				},
-				transparent_background = true,
+				transparent_background = false,
 				show_end_of_buffer = false,
 				integration_default = false,
 				no_bold = true,
@@ -357,7 +357,7 @@ return {
 			vim.api.nvim_set_hl(0, "NavicText", { default = true, bg = "none", fg = "#eedaad" })
 			vim.api.nvim_set_hl(0, "NavicSeparator", { default = true, bg = "none", fg = "#eedaad" })
 
-			vim.api.nvim_command("colorscheme catppuccin")
+--			vim.api.nvim_command("colorscheme catppuccin")
 		end,
 	},
 --	{
@@ -377,16 +377,35 @@ return {
 --			-- vim.g.gruvbox_material_colors_override = { bg0 = "#121212" }
 --			-- vim.g.gruvbox_material_better_performance = 1
 --
---			-- vim.cmd.colorscheme("gruvbox-material")
+--			 vim.cmd.colorscheme("gruvbox-material")
 --		end,
 --	},
---    {
---        'f4z3r/gruvbox-material.nvim'
---    },
---    {
---        'lukas-reineke/onedark.nvim',
---        config = function()
---            require("onedark").setup()
---        end,
---    }
+{
+    "f4z3r/gruvbox-material.nvim",
+    name = 'gruvbox-material',
+    lazy = false,
+    priority = 1000,
+    config = function()
+        require('gruvbox-material').setup({
+            italics = true,             -- enable italics in general
+            contrast = "soft",        -- set contrast, can be any of "hard", "medium", "soft"
+            comments = {
+                italics = true,           -- enable italic comments
+            },
+            background = {
+                transparent = false,      -- set the background to transparent
+            },
+            float = {
+                force_background = false, -- force background on floats even when background.transparent is set
+                background_color = nil,   -- set color for float backgrounds
+            },
+            signs = {
+                highlight = true,         -- whether to highlight signs
+            },
+            customize = nil,            -- customize the theme in any way you desire
+        })
+        vim.cmd.colorscheme("gruvbox-material")
+    end,
+},
+
 }

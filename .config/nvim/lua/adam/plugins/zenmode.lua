@@ -22,7 +22,8 @@ return {
 				},
 			},
             plugins = {
-                twilight = { enabled = false }
+                twilight = { enabled = false },
+                tmux = { enabled = true }
             },
 		})
 		require("twilight").setup({

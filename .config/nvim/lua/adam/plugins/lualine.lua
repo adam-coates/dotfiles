@@ -14,7 +14,7 @@ return {
 			options = {
 				--theme = "auto",
 				-- theme = "github_dark",
-				theme = "catppuccin",
+				theme = "gruvbox-material",
 				globalstatus = true,
 				icons_enabled = true,
 				-- component_separators = { left = "│", right = "│" },
