@@ -96,7 +96,7 @@ find_folder() {
 }
 
 # Main script to manage notes
-notes_dir="$HOME/notes/Inbox"
+notes_dir="$HOME/notes/0 - Inbox"
 notes=("$notes_dir"/*) # Array of all notes in the Inbox
 note_names=()
 
