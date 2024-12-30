@@ -1,0 +1,11 @@
+font-family = "VictorMono Nerd Font Mono"
+
+theme = "gruvbox-material"
+
+window-decoration = false
+
+gtk-tabs-location = bottom
+
+background-opacity = 0.8
+
+background-blur-radius = 0

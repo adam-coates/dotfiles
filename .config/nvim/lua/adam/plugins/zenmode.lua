@@ -9,7 +9,7 @@ return {
 		require("zen-mode").setup({
 			window = {
 				backdrop = 0.95,
-				width = 180, -- width of the Zen window
+				width = 150, -- width of the Zen window
 				height = 1, -- height of the Zen window
 				options = {
 					signcolumn = "no", -- disable signcolumn
@@ -22,7 +22,7 @@ return {
 				},
 			},
             plugins = {
-                twilight = { enabled = false },
+                twilight = { enabled = true },
                 tmux = { enabled = true }
             },
 		})

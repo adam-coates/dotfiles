@@ -69,18 +69,3 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 })
 
 
-vim.api.nvim_create_autocmd("BufEnter", {
-  pattern = "*.md",
-  callback = function()
-    vim.cmd("ZenMode")
-  end,
-})
-
-vim.api.nvim_create_autocmd("BufEnter", {
-    pattern = "*.md",
-    callback = function()
-        vim.cmd("SoftPencil")
-    end,
-})
-
-

@@ -1,4 +1,4 @@
-vim.g.mapleader = " "
+﻿vim.g.mapleader = " "
 
 local keymap = vim.keymap -- for conciseness
 
@@ -58,10 +58,3 @@ keymap.set("n", "<leader>on", function()
   vim.cmd("cd " .. original_cwd)
 end, { desc = "Create Obsidian note with template" })
 
-
-vim.api.nvim_set_keymap(
-    "n",
-    "<leader>td",
-    ":lua require('custom_functions').todoist_telescope_picker()<CR>",
-    { noremap = true, silent = true }
-)
