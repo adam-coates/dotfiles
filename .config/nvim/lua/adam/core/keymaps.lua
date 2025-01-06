@@ -58,3 +58,12 @@ keymap.set("n", "<leader>on", function()
   vim.cmd("cd " .. original_cwd)
 end, { desc = "Create Obsidian note with template" })
 
+
+-- Bold: position cursor between **
+vim.keymap.set('v', '<leader>b', 'c****<Esc>hhp')
+
+-- Italic: position cursor between *
+vim.keymap.set('v', '<leader>i', 'c**<Esc>hp')
+
+-- Both: position cursor between ***
+vim.keymap.set('v', '<leader>bi', 'c******<Esc>hhhp')

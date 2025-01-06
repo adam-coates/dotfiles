@@ -140,9 +140,9 @@ return {
         lspconfig["vale_ls"].setup({
 			capabilities = capabilities,
 			init_options = {
-				configPath = "/Users/adam/.config/vale/vale.ini",
+				configPath = "/home/adam/.config/vale/vale.ini",
 			},
-			cmd_env = { VALE_CONFIG_PATH = "/Users/adam/.config/vale/vale.ini" },
+			cmd_env = { VALE_CONFIG_PATH = "/home/adam/.config/vale/vale.ini" },
 		})
 		lspconfig["lua_ls"].setup({
 			capabilities = capabilities,

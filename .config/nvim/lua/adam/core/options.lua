@@ -50,7 +50,6 @@ opt.backup = false
 opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
 opt.undofile = true
 
-opt.mouse=""
 
 -- vim.g.markdown_folding = 1
 
