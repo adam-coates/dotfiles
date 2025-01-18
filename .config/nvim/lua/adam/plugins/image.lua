@@ -18,6 +18,10 @@ return {
 						only_render_image_at_cursor = true,
 						-- only_render_image_at_cursor_mode = "popup",
 						filetypes = { "markdown", "vimwiki", "quarto" },
+						max_width = 100, -- tweak to preference
+						max_height = 12, -- ^
+						max_height_window_percentage = math.huge, -- this is necessary for a good experience
+						max_width_window_percentage = math.huge,
 					},
 				},
 			})

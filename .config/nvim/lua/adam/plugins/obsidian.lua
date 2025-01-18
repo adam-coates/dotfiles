@@ -22,6 +22,7 @@ return {
 
 		templates = {
 			folder = "Templates",
+            date_format = "%d-%m-%Y",
 			substitutions = {
 				citation_title = function()
 					vim.cmd("FindCitation")

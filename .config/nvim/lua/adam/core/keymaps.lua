@@ -1,4 +1,5 @@
 ﻿vim.g.mapleader = " "
+vim.g.maplocalleader = ","
 
 local keymap = vim.keymap -- for conciseness
 
@@ -67,3 +68,8 @@ vim.keymap.set('v', '<leader>i', 'c**<Esc>hp')
 
 -- Both: position cursor between ***
 vim.keymap.set('v', '<leader>bi', 'c******<Esc>hhhp')
+
+
+-- Search for files in notes
+vim.keymap.set("n", "<leader>os", ":Telescope find_files search_dirs={\"/home/adam/notes\"}<cr>", {desc = "find notes files"})
+vim.keymap.set("n", "<leader>oz", ":Telescope live_grep search_dirs={\"/home/adam/notes\"}<cr>", {desc = "grep notes"})

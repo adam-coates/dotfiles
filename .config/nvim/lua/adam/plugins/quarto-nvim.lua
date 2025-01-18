@@ -5,24 +5,38 @@ return {
 		{ "jmbuhr/otter.nvim" },
 		"nvim-treesitter/nvim-treesitter",
 	},
-	config = function()
-		require("quarto").setup({
-			closePreviewOnExit = true,
-			lspFeatures = {
+	opts = {
+		debug = false,
+		closePreviewOnExit = true,
+		lspFeatures = {
+			enabled = true,
+			chunks = "curly",
+			languages = { "r", "python", "julia", "bash", "html" },
+			diagnostics = {
 				enabled = true,
-				languages = { "r", "python", "bash" },
-				chunks = "all",
-				diagnostics = {
-					enabled = true,
-					triggers = { "TextChanged" },
-				},
-				completion = {
-					enabled = true,
-				},
+				triggers = { "BufWritePost" },
 			},
-		})
-
-		vim.treesitter.language.register("markdown", "quarto")
+			completion = {
+				enabled = true,
+			},
+		},
+		codeRunner = {
+			enabled = true,
+			default_method = "molten", -- 'molten' or 'slime'
+			ft_runners = {}, -- filetype to runner, ie. `{ python = "molten" }`.
+			-- Takes precedence over `default_method`
+			never_run = { "yaml" }, -- filetypes which are never sent to a code runner
+		},
+		keymap = {
+			-- set whole section or individual keys to `false` to disable
+			hover = "K",
+			definition = "gd",
+			type_definition = "gD",
+			rename = "<leader>lR",
+			format = "<leader>lf",
+			references = "gr",
+			document_symbols = "gS",
+		},
 		-- Function to open Quarto Preview in a buffer instead of a tab
 		vim.cmd([[
             function! QuartoPreview()
@@ -31,7 +45,7 @@ return {
                 :call feedkeys('<Esc>')
                 :bprev
             endfunction
-        ]])
-		vim.keymap.set("n", "<localleader>P", ":call QuartoPreview() <CR>")
-	end,
+        ]]),
+		vim.keymap.set("n", "<localleader>P", ":call QuartoPreview() <CR>"),
+	},
 }
