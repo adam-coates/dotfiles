@@ -5,6 +5,12 @@ return {
 		"nvim-lua/plenary.nvim",
 		{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
 		"nvim-tree/nvim-web-devicons",
+		{
+			"jmbuhr/telescope-zotero.nvim",
+			dependencies = {
+				{ "kkharji/sqlite.lua" },
+			},
+		},
 	},
 	config = function()
 		local telescope = require("telescope")
@@ -13,7 +19,7 @@ return {
 		telescope.setup({
 			defaults = {
 				path_display = { "truncate " },
-                layout_strategy = "vertical",
+				layout_strategy = "vertical",
 				mappings = {
 					i = {
 						["<C-k>"] = actions.move_selection_previous, -- move to prev result
@@ -25,6 +31,7 @@ return {
 		})
 
 		telescope.load_extension("fzf")
+         telescope.load_extension("zotero")
 
 		-- set keymaps
 		local keymap = vim.keymap -- for conciseness
@@ -33,5 +40,6 @@ return {
 		keymap.set("n", "<leader>fr", "<cmd>Telescope oldfiles<cr>", { desc = "Fuzzy find recent files" })
 		keymap.set("n", "<leader>fs", "<cmd>Telescope live_grep<cr>", { desc = "Find string in cwd" })
 		keymap.set("n", "<leader>fc", "<cmd>Telescope grep_string<cr>", { desc = "Find string under cursor in cwd" })
+        keymap.set('n', '<leader>fz', ':Telescope zotero<cr>', { desc = '[z]otero' })
 	end,
 }
