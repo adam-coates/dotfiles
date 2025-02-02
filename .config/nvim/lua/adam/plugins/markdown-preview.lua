@@ -3,9 +3,6 @@ return {
 	version = "0.0.10",
 	cmd = { "MarkdownPreview", "MarkdownPreviewStop", "MarkdownPreviewToggle" },
 	event = "VeryLazy",
-	init = function()
-		vim.g.mkdp_filetypes = { "markdown", "quarto" }
-	end,
 	ft = { "markdown", "quarto" },
 	config = function()
 		-- Can't get lazy build to work ¯\_(ツ)_/¯
