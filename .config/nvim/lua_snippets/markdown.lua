@@ -20,42 +20,8 @@ local function get_current_datetime(offset_hours)
 	return os.date("%Y-%m-%dT%H:%M:%S", os.time(date_table))
 end
 
--- example function to search for a string in current buffer
--- here I wanted a snippet to only expand if a phrase was not in buffer
---
---local function searchForFooInBuffer()
---    -- Get the content of the current buffer
---    local current_buffer = vim.api.nvim_get_current_buf()
---    local document = vim.api.nvim_buf_get_lines(current_buffer, 0, -1, false)
---
---    -- Concatenate lines into a single string
---    document = table.concat(document, "\n")
---
---    -- Search for "foo" in the document
---    if string.find(document, "functional magnetic resonance imaging (fMRI)") then
---        return false  -- Return false if "foo" is found
---    else
---        return true  -- Return true if "foo" is not found
---    end
---end
 
 return {
-	-- Pandoc-- Pandoc
-	s({ trig = "ic", dscr = "Indirect in-text citation" }, {
-		f(_G.LuaSnipConfig.intext_cite),
-		t("[-"),
-		f(_G.LuaSnipConfig.visual_selection),
-		t("]"),
-		i(0),
-	}),
-
-	s({ trig = "wl", dscr = "Wiki Link" }, {
-		t("[["),
-		f(_G.LuaSnipConfig.visual_selection),
-		i(1),
-		t("]]"),
-		i(0),
-	}),
 	s(
 		{ trig = "fm", dscr = "Front matter" },
 		fmta(

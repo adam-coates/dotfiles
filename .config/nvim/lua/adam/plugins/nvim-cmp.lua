@@ -8,6 +8,7 @@ return {
 		"saadparwaiz1/cmp_luasnip", -- for autocompletion
 		"rafamadriz/friendly-snippets", -- useful snippets
 		"onsails/lspkind.nvim", -- vs-code like pictograms
+        "jmbuhr/cmp-pandoc-references",
 		"jalvesaq/cmp-zotcite",
 	},
 	config = function()
@@ -16,50 +17,6 @@ return {
 		local luasnip = require("luasnip")
 
 		local lspkind = require("lspkind")
-		_G.LuaSnipConfig = {}
-		-- Helpers
-		function _G.LuaSnipConfig.visual_selection(_, parent)
-			return parent.snippet.env.LS_SELECT_DEDENT or {}
-		end
-
-		function _G.LuaSnipConfig.intext_cite(_, parent)
-			local selected_text = parent.snippet.env.LS_SELECT_DEDENT or {}
-			local extracted_names = {}
-
-			for _, text in ipairs(selected_text) do
-				-- Extract the portion of the text after #
-				local substring = text:match("#(.+)")
-				if substring then
-					-- Replace "Etal" or "Et al." with "et al."
-					substring = substring:gsub("_Etal_", " et al.,")
-					substring = substring:gsub("_Et al%.", " et al.,")
-					-- Remove any numbers after "et al."
-					substring = substring:gsub(" et al%..*", " et al.,")
-					-- Truncate at the last occurrence of a number
-					local truncated = substring:gsub("_%d+$", "")
-					-- Split by underscores and add to extracted_names
-					local names = {}
-					for name in truncated:gmatch("([^_]+)") do
-						table.insert(names, name .. " ") -- Add a space at the end of each name
-					end
-					-- Check if "etal" is present
-					local has_etal = string.find(truncated, "etal")
-					-- Concatenate names without "and" if "etal" is present
-					if has_etal then
-						table.insert(extracted_names, table.concat(names))
-					else
-						-- Concatenate names with "and" if there are more than one
-						if #names > 1 then
-							table.insert(extracted_names, table.concat(names, "and "))
-						else
-							table.insert(extracted_names, names[1])
-						end
-					end
-				end
-			end
-
-			return extracted_names
-		end
 
 		local check_back_space = function()
 			local col = vim.fn.col(".") - 1
@@ -126,6 +83,7 @@ return {
 				{ name = "path" }, -- file system paths
 				{ name = "cmp_zotcite" },
 				{ name = "otter" },
+                {name = "pandoc_references"},
 			}),
 			-- configure lspkind for vs-code like pictograms in completion menu
 			formatting = {
