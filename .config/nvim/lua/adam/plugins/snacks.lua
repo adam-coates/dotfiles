@@ -51,13 +51,6 @@ return {
 				{ section = "header" },
 				{ section = "keys", gap = 1, padding = 1 },
 				{ section = "startup" },
-               -- {
-               --     pane = 2,
-               --     gap = 1,
-               --     title = "Notes",
-			   -- 	icon = " ",
-               --     padding = 1,
-               -- },
                 {
                     pane = 2,
 					icon = "󰍉 ",
@@ -82,46 +75,37 @@ return {
 		},
 		dim = { enabled = true },
 		explorer = { enabled = true },
-		indent = { enabled = true },
+		indent = {
+            animate = {
+                enabled = false},
+            enabled = true },
 		input = { enabled = true },
 		lazygit = { enabled = true },
 		notifier = {
 			enabled = true,
 			timeout = 3000,
 		},
-		picker = { enabled = true },
+		picker = { enabled = false },
 		quickfile = { enabled = false },
 		scope = { enabled = false },
 		scroll = { enabled = false },
 		statuscolumn = { enabled = true },
 		toggle = { enalbed = false },
 		words = { enabled = false },
-		zen = { enabled = true },
-		styles = {
-			zen = {
-				enter = true,
-				fixbuf = true,
-				minimal = false,
-				width = 140,
-				height = 0,
-				backdrop = { transparent = false, blend = 40 },
-				keys = { q = false },
-				zindex = 40,
-				wo = {
-					winhighlight = "NormalFloat:Normal",
-				},
-				w = {
-					snacks_main = true,
-				},
-			},
-		},
+		zen = { enabled = false },
 		vim.api.nvim_create_user_command("Zen", function()
-			Snacks.zen()
 			vim.wo.wrap = true
 			vim.wo.linebreak = true
 		end, {}),
 	},
 	keys = {
+        {
+            "<leader>fb",
+            function()
+                Snacks.picker.buffers()
+            end,
+            desc = "Buffers",
+        },
 		{
 			"<leader>lg",
 			function()

@@ -2,6 +2,7 @@ return {
 	"nvim-telescope/telescope.nvim",
 	branch = "0.1.x",
 	dependencies = {
+        { 'nvim-telescope/telescope-ui-select.nvim' },
 		"nvim-lua/plenary.nvim",
 		{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
 		"nvim-tree/nvim-web-devicons",
@@ -10,6 +11,15 @@ return {
 			dependencies = {
 				{ "kkharji/sqlite.lua" },
 			},
+			config = function()
+				-- This is the key addition - directly configuring the zotero plugin
+				require('zotero').setup({
+					zotero_db_path = "/home/adam/Zotero/zotero.sqlite",
+					better_bibtex_db_path = "/home/adam/Zotero/better-bibtex.sqlite",
+					zotero_storage_path = "/home/adam/Nextcloud/zotero/",
+					pdf_opener = "xdg-open"
+				})
+			end,
 		},
 	},
 	config = function()
@@ -28,15 +38,20 @@ return {
 				},
 			},
 			extensions = {
+                ['ui-select'] = {
+                    require('telescope.themes').get_dropdown(),
+                },
+				-- You can keep this too for completeness, but the direct setup is what matters
 				zotero = {
 					zotero_db_path = "/home/adam/Zotero/zotero.sqlite",
 					better_bibtex_db_path = "/home/adam/Zotero/better-bibtex.sqlite",
-					zotero_storage_path = "/home/adam/Zotero",
+					zotero_storage_path = "/home/adam/Nextcloud/zotero/",
 					pdf_opener = "xdg-open"
-				}
+				},
 			}
 		})
 		telescope.load_extension("fzf")
+        telescope.load_extension('ui-select')
 		telescope.load_extension("zotero")
 		
 		-- Your keymaps remain the same

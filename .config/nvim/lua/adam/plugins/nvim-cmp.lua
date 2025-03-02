@@ -82,7 +82,6 @@ return {
 				{ name = "buffer" }, -- text within current buffer
 				{ name = "path" }, -- file system paths
 				{ name = "cmp_zotcite" },
-				{ name = "otter" },
                 {name = "pandoc_references"},
 			}),
 			-- configure lspkind for vs-code like pictograms in completion menu

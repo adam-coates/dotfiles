@@ -1,13 +1,15 @@
 return {
 	{
 		"benlubas/molten-nvim",
-		version = "^1.0.0", -- use version <2.0.0 to avoid breaking changes
 		dependencies = { "3rd/image.nvim" },
 		build = ":UpdateRemotePlugins",
 		init = function()
 			-- these are examples, not defaults. Please see the readme
 			vim.g.molten_image_provider = "image.nvim"
-			vim.g.molten_output_win_max_height = 20
+			vim.g.molten_output_win_max_height = 50
+            vim.g.molten_auto_image_popup = 1
+            vim.g.molten_image_location = "virt"
+            vim.g.molten_virt_text_output = true
 			vim.keymap.set("n", "<localleader>mi", ":MoltenInit<CR>")
 			vim.keymap.set("n", "<localleader>e", ":MoltenEvaluateOperator<CR>")
 			vim.keymap.set("n", "<localleader>rr", ":MoltenReevaluateCell<CR>")
