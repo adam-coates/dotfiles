@@ -6,18 +6,60 @@ return {
 	},
 	enabled = true,
 	lazy = false,
-	event = { "BufReadPost", "BufNewFile", "VeryLazy" },
+	event = { "bufreadpost", "bufnewfile" },
 	config = function()
 		local lazy_status = require("lazy.status")
-		-- local icons = require("config.icons")
+		
+		-- Word count functions
+		local function wordcount()
+			local wc_table = vim.fn.wordcount()
+			
+			-- If in visual mode and visual_words exists, show selection word count
+			if wc_table.visual_words then
+				return wc_table.visual_words .. ' words selected'
+			else
+				-- Regular word count
+				return tostring(wc_table.words) .. ' words'
+			end
+		end
+		
+		local function readingtime()
+			local wc_table = vim.fn.wordcount()
+			local words = wc_table.visual_words or wc_table.words
+			return tostring(math.ceil(words / 200.0)) .. ' min'
+		end
+		
+		local function is_markdown()
+			return vim.bo.filetype == "markdown" or vim.bo.filetype == "asciidoc"
+		end
+		
+		-- Scrollbar function - shows position in file with unicode block characters
+		local function scrollbar()
+			local sbar_chars = {
+				'▔', -- top
+				'🮂',
+				'🬂',
+				'🮃',
+				'▀',
+				'▄',
+				'▃',
+				'🬭',
+				'▂',
+				'▁', -- bottom
+			}
+			
+			local cur_line = vim.api.nvim_win_get_cursor(0)[1]
+			local lines = vim.api.nvim_buf_line_count(0)
+			
+			local i = math.floor((cur_line - 1) / lines * #sbar_chars) + 1
+			return string.rep(sbar_chars[i], 2)
+		end
+		
 		require("lualine").setup({
 			options = {
-				--theme = "auto",
-				-- theme = "github_dark",
 				theme = "gruvbox-material",
 				globalstatus = true,
 				icons_enabled = true,
-				-- component_separators = { left = "│", right = "│" },
 				component_separators = { left = "|", right = "|" },
 				section_separators = { left = "", right = "" },
 				disabled_filetypes = {
@@ -38,24 +80,25 @@ return {
 				lualine_c = {
 					{
 						"filename",
-						-- path = 1, -- 2 for full path
 						symbols = {
-							modified = "  ",
-							readonly = "  ",
-							unnamed = "  ",
+							modified = "  ",
+							readonly = "  ",
+							unnamed = "  ",
 						},
 					},
 					{ "fancy_searchcount" },
 				},
 				lualine_x = {
-					--"fancy_lsp_servers",
 					{
 						"fancy_diagnostics",
 						sources = { "nvim_lsp" },
-						symbols = { error = " ", warn = " ", info = " " },
+						symbols = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " },
 					},
-
-					"progress",
+					-- Add word count and reading time for markdown files
+					{ wordcount, cond = is_markdown },
+					{ readingtime, cond = is_markdown },
+					-- Replace progress with scrollbar
+					{ scrollbar },
 				},
 				lualine_y = { "fancy_filetype" },
 				lualine_z = {
@@ -70,7 +113,6 @@ return {
 				lualine_a = {},
 				lualine_b = {},
 				lualine_c = { "filename" },
-				-- lualine_x = { "location" },
 				lualine_y = {},
 				lualine_z = {},
 			},
@@ -88,11 +130,11 @@ return {
 --    local lazy_status = require("lazy.status") -- to configure lazy pending updates count
 --
 --    local colors = {
---      blue = "#65D1FF",
---      green = "#3EFFDC",
---      violet = "#FF61EF",
---      yellow = "#FFDA7B",
---      red = "#FF4A4A",
+--      blue = "#65d1ff",
+--      green = "#3effdc",
+--      violet = "#ff61ef",
+--      yellow = "#ffda7b",
+--      red = "#ff4a4a",
 --      fg = "#c3ccdc",
 --      bg = "#112638",
 --      inactive_bg = "#2c3043",
