@@ -1,23 +1,9 @@
 require("adam.core")
 require("adam.lazy")
-require("custom_functions")
 package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?/init.lua"
 package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua"
 
 
--- Create a key mapping to call the title function
-vim.api.nvim_set_keymap(
-	"n",
-	"<leader>zt",
-	':lua require("custom_functions").title()<CR>',
-	{ noremap = true, silent = true }
-)
-vim.api.nvim_set_keymap(
-	"n",
-	"<leader>zp",
-	':lua require("custom_functions").yaml_ref()<CR>',
-	{ noremap = true, silent = true }
-)
 vim.g.python3_host_prog = "/home/adam/.pyenv/versions/py3/bin/python3"
 
 -- function to renmae buffer to the currently selected highlighted text

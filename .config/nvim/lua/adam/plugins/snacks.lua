@@ -51,18 +51,18 @@ return {
 				{ section = "header" },
 				{ section = "keys", gap = 1, padding = 1 },
 				{ section = "startup" },
-                {
-                    pane = 2,
+				{
+					pane = 2,
 					icon = "󰍉 ",
 					key = "s",
 					title = "Search Notes",
 					action = ":lua Snacks.dashboard.pick('live_grep', {cwd = '/home/adam/notes/', wrap = true})",
-                    indent = 2,
-                    padding = 1,
+					indent = 2,
+					padding = 1,
 				},
 				{
 					pane = 2,
-                    gap = 1,
+					gap = 1,
 					icon = " ",
 					section = "recent_files",
 					cwd = "/home/adam/notes/",
@@ -76,9 +76,11 @@ return {
 		dim = { enabled = true },
 		explorer = { enabled = true },
 		indent = {
-            animate = {
-                enabled = false},
-            enabled = true },
+			animate = {
+				enabled = false,
+			},
+			enabled = true,
+		},
 		input = { enabled = true },
 		lazygit = { enabled = true },
 		notifier = {
@@ -90,22 +92,48 @@ return {
 		scope = { enabled = false },
 		scroll = { enabled = false },
 		statuscolumn = { enabled = true },
-		toggle = { enalbed = false },
+		toggle = { enalbed = true },
 		words = { enabled = false },
-		zen = { enabled = false },
-		vim.api.nvim_create_user_command("Zen", function()
-			vim.wo.wrap = true
-			vim.wo.linebreak = true
-		end, {}),
+		zen = {
+			enabled = true,
+			toggles = {
+				dim = true,
+				git_signs = false,
+				diagnostics = false,
+				line_number = false,
+				relative_number = false,
+				signcolumn = "no",
+				indent = false,
+			},
+		},
+		styles = {
+			zen = {
+				enter = true,
+				fixbuf = true,
+				minimal = false,
+				width = 0,
+				height = 0,
+				backdrop = { transparent = false },
+				keys = { q = false },
+				zindex = 40,
+				wo = {
+					winhighlight = "NormalFloat:Normal",
+                    wrap = true,
+				},
+				w = {
+					snacks_main = true,
+				},
+			},
+		},
 	},
 	keys = {
-        {
-            "<leader>fb",
-            function()
-                Snacks.picker.buffers()
-            end,
-            desc = "Buffers",
-        },
+		{
+			"<leader>fb",
+			function()
+				Snacks.picker.buffers()
+			end,
+			desc = "Buffers",
+		},
 		{
 			"<leader>lg",
 			function()
@@ -135,5 +163,9 @@ return {
 				Snacks.toggle.dim():map("<leader>\\d")
 			end,
 		})
+		vim.api.nvim_create_user_command("Zen", function()
+			Snacks.zen()
+			vim.wo.linebreak = true
+		end, {})
 	end,
 }
