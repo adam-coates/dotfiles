@@ -9,6 +9,7 @@ return {
 		require("markview").setup({
 			preview = {
 				icon_provider = "devicons",
+                filetypes = { "markdown", "Avante", "quarto" },
 			},
 			markdown = {
 				list_items = {
