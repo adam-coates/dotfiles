@@ -1,7 +1,7 @@
 return {
 	"quarto-dev/quarto-nvim",
 	dependencies = {
-		{ "hrsh7th/nvim-cmp" },
+        "saghen/blink.cmp",
 		{ "jmbuhr/otter.nvim" },
 		"nvim-treesitter/nvim-treesitter",
 	},
