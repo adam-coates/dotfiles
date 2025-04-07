@@ -17,13 +17,22 @@ return {
 			},
 			"saghen/blink.cmp",
 			{ "antosha417/nvim-lsp-file-operations", config = true },
-			"williamboman/mason.nvim",
+			{
+				"williamboman/mason.nvim",
+				build = ":MasonUpdate",
+				opts = {
+					registries = {
+						"github:mason-org/mason-registry",
+						"github:visimp/mason-registry", -- for ltex_plus
+					},
+				},
+			},
 			"williamboman/mason-lspconfig.nvim",
 			"WhoIsSethDaniel/mason-tool-installer.nvim",
 			-- Uncomment if you want to use schemastore for YAML
 			-- "b0o/schemastore.nvim",
 		},
-		config = function ()
+		config = function()
 			local capabilities = require("blink.cmp").get_lsp_capabilities()
 			local lspconfig = require("lspconfig")
 
@@ -35,6 +44,72 @@ return {
 					},
 				},
 				pyright = true,
+
+				tailwindcss = true,
+
+				html = true,
+
+				cssls = true,
+
+				r_language_server = {
+					settings = {
+						r = {
+							lsp = {
+								rich_documentation = false,
+							},
+						},
+					},
+				},
+
+				marksman = {
+					filetypes = { "markdown", "quarto" },
+				},
+
+				ltex_plus = {
+					settings = {
+						ltex = {
+							enabled = {
+								"bib",
+								"context",
+								"gitcommit",
+								"html",
+								"markdown",
+								"org",
+								"pandoc",
+								"plaintex",
+								"quarto",
+								"mail",
+								"mdx",
+								"rmd",
+								"rnoweb",
+								"rst",
+								"tex",
+								"latex",
+								"text",
+								"typst",
+								"xhtml",
+							},
+							language = "en-US",
+							languageModel = "~/models/ngrams/",
+							disabledRules = {
+								["en-US"] = {
+									"MORFOLOGIK_RULE_EN_US",
+								},
+							},
+						},
+					},
+					filetypes = { "markdown", "text", "tex", "rst", "quarto", "qmd" },
+				},
+				vale_ls = {
+					init_options = {
+						configPath = "/home/adam/.config/vale/.vale.ini",
+					},
+					cmd_env = { VALE_CONFIG_PATH = "/home/adam/.config/vale/.vale.ini" },
+					filetypes = { "markdown", "text", "tex", "rst", "quarto", "qmd" },
+				},
+				harper_ls = {
+					filetypes = { "markdown", "quarto" },
+				},
 
 				yamlls = {
 					settings = {
@@ -103,6 +178,10 @@ return {
 				"bashls",
 				"marksman",
 				"clangd",
+				"ltex_plus",
+				"vale_ls",
+				"harper_ls",
+				"r_language_server",
 				"prettier", -- prettier formatter
 				"stylua", -- lua formatter
 				"isort", -- python formatter

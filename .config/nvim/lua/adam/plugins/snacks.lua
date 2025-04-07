@@ -92,7 +92,7 @@ return {
 		scope = { enabled = false },
 		scroll = { enabled = false },
 		statuscolumn = { enabled = true },
-		toggle = { enalbed = true },
+		toggle = { enabled = true },
 		words = { enabled = false },
 		zen = {
 			enabled = true,

@@ -228,3 +228,8 @@ vim.keymap.set('v', '<leader>bi', 'c******<Esc>hhhp')
 -- Search for files in notes
 vim.keymap.set("n", "<leader>os", ":Telescope find_files search_dirs={\"/home/adam/notes\"}<cr>", {desc = "find notes files"})
 vim.keymap.set("n", "<leader>oz", ":Telescope live_grep search_dirs={\"/home/adam/notes\"}<cr>", {desc = "grep notes"})
+
+vim.keymap.set("n", "j", "gj", { noremap = true, silent = true })
+vim.keymap.set("n", "k", "gk", { noremap = true, silent = true })
+vim.keymap.set("v", "j", "gj", { noremap = true, silent = true })
+vim.keymap.set("v", "k", "gk", { noremap = true, silent = true })
