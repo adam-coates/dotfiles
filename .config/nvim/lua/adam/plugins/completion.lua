@@ -53,7 +53,7 @@ return {
 				auto_show = true,
 			},
 			menu = {
-                max_height = 50,
+				max_height = 50,
 				draw = {
 					components = {
 						kind_icon = {

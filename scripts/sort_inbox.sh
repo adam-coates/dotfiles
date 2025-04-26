@@ -83,7 +83,8 @@ menu() {
 extract_tag() {
     local file="$1"
     # Using awk to get the tag line and sed to clean it up
-    local tag=$(awk '/tags:/{getline; print; exit}' "$file" | sed -e 's/^ *- *//' -e 's/^ *//;s/ *$//')
+    local tag=$(awk -F': *' '/location:/{print $2; exit}' "$file" | sed -e 's/^ *- *//' -e 's/^ *//;s/ *$//') 
+    # local tag=$(awk '/tags:/{getline; print; exit}' "$file" | sed -e 's/^ *- *//' -e 's/^ *//;s/ *$//')
     echo "$tag"
 }
 
@@ -96,7 +97,7 @@ find_folder() {
 }
 
 # Main script to manage notes
-notes_dir="$HOME/notes/0 - Inbox"
+notes_dir="$HOME/notes/00 - Inbox"
 notes=("$notes_dir"/*) # Array of all notes in the Inbox
 note_names=()
 
@@ -127,10 +128,10 @@ if [[ $confirm == "ok" ]]; then
                     mv "$note_file" "$folder"
                     echo "Moved '${note_names[i]}' to '$folder'"
                 else
-                    echo "Folder for tag '$tag' not found. Skipping '${note_names[i]}'."
+                    echo "location: '$tag' not found. Skipping '${note_names[i]}'."
                 fi
             else
-                echo "No tag found in '${note_names[i]}'. Skipping."
+                echo "No location found in '${note_names[i]}'. Skipping."
             fi
         elif [[ ${actions[i]} -eq 2 ]]; then
             rm -f "${note_file}"

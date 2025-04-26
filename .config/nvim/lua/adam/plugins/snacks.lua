@@ -109,13 +109,13 @@ return {
 		styles = {
 			zen = {
 				enter = true,
-				fixbuf = true,
+				fixbuf = false,
 				minimal = false,
-				width = 0,
+				width = 200,
 				height = 0,
 				backdrop = { transparent = false },
 				keys = { q = false },
-				zindex = 40,
+				zindex = 70,
 				wo = {
 					winhighlight = "NormalFloat:Normal",
                     wrap = true,

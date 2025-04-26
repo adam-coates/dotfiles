@@ -20,7 +20,6 @@ local function get_current_datetime(offset_hours)
 	return os.date("%Y-%m-%dT%H:%M:%S", os.time(date_table))
 end
 
-
 return {
 	s(
 		{ trig = "fm", dscr = "Front matter" },
@@ -43,7 +42,7 @@ return {
 		),
 		{ condition = line_begin }
 	),
-    s(
+	s(
 		{ trig = "fmn", dscr = "Front matter for notes" },
 		fmta(
 			[[
@@ -58,54 +57,42 @@ return {
             ]],
 			{
 				i(1),
-                i(2),
+				i(2),
 				p(os.date, "%d/%m/%Y"),
-                i(3),
+				i(3),
 			}
 		),
 		{ condition = line_begin }
 	),
 
-	s(
-		{ trig = "(%d)x(%d)", regTrig = true, dscr = "Rows x columns" },
-		fmta(
-			[[
-               <>
-            ]],
-			{
-				d(1, function(_, snip)
-					local nodes = {}
-					local nr_rows = snip.captures[1]
-					local nr_cols = snip.captures[2]
-					local idx = 0
-
-					local hlines = ""
-					for _ = 1, nr_cols do
-						idx = idx + 1
-						table.insert(nodes, t("| "))
-						table.insert(nodes, i(idx))
-						table.insert(nodes, t(" "))
-						hlines = hlines .. "|-----"
-					end
-					table.insert(nodes, t({ "|", "" }))
-					hlines = hlines .. "|"
-					table.insert(nodes, t({ hlines, "" }))
-
-					for _ = 1, nr_rows do
-						for _ = 1, nr_cols do
-							idx = idx + 1
-							table.insert(nodes, t("| "))
-							table.insert(nodes, i(idx))
-							table.insert(nodes, t(" "))
-						end
-						table.insert(nodes, t({ "|", "" }))
-					end
-					return sn(nil, nodes)
-				end),
-			}
-		),
-		{ condition = line_begin }
-	),
+	s({ trig = "table(%d+)x(%d+)", regTrig = true }, {
+		---@diagnostic disable-next-line: unused-local
+		d(1, function(args, snip)
+			local nodes = {}
+			local i_counter = 0
+			local hlines = ""
+			for _ = 1, snip.captures[2] do
+				i_counter = i_counter + 1
+				table.insert(nodes, t("| "))
+				table.insert(nodes, i(i_counter, "Column" .. i_counter))
+				table.insert(nodes, t(" "))
+				hlines = hlines .. "|---"
+			end
+			table.insert(nodes, t({ "|", "" }))
+			hlines = hlines .. "|"
+			table.insert(nodes, t({ hlines, "" }))
+			for _ = 1, snip.captures[1] do
+				for _ = 1, snip.captures[2] do
+					i_counter = i_counter + 1
+					table.insert(nodes, t("| "))
+					table.insert(nodes, i(i_counter))
+					table.insert(nodes, t(" "))
+				end
+				table.insert(nodes, t({ "|", "" }))
+			end
+			return sn(nil, nodes)
+		end),
+	}),
 	s(
 		{ trig = "event", dscr = "YAML Event Snippet" },
 		fmta(
