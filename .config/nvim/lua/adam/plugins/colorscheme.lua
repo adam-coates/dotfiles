@@ -5,6 +5,7 @@ return {
         priority = 1001,
         init = function()
             vim.g.gruvbox_material_foreground = "material"
+            vim.g.gruvbox_material_transparent_background = 1
             vim.g.gruvbox_material_background = "soft"
             vim.g.gruvbox_material_ui_contrast = "high"
             vim.g.gruvbox_material_float_style = "bright"

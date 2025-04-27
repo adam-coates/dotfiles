@@ -195,7 +195,7 @@ keymap.set("n", "<leader>on", function()
       return
     end
 
-    local dir = vim.fn.expand("~/notes/0 - Inbox/")
+    local dir = vim.fn.expand("~/notes/00 - Inbox/")
     local filename = dir .. title .. ".md"
 
     vim.fn.mkdir(dir, "p")

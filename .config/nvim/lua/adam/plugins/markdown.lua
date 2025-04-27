@@ -80,6 +80,9 @@ return {
 					"RenderMarkdownH6",
 				},
 			},
+            code = {
+                disable_background = { 1 },
+            },
 		})
 	end,
 }

@@ -34,6 +34,9 @@ return {
 				end,
 			},
 		},
+        attachments = {
+            img_folder = "999 - extra/images",
+        },
 		-- Optional, customize how note IDs are generated given an optional title.
 		---@param title string|?
 		---@return string
