@@ -9,52 +9,52 @@ return {
 	event = { "bufreadpost", "bufnewfile" },
 	config = function()
 		local lazy_status = require("lazy.status")
-		
+
 		-- Word count functions
 		local function wordcount()
 			local wc_table = vim.fn.wordcount()
-			
+
 			-- If in visual mode and visual_words exists, show selection word count
 			if wc_table.visual_words then
-				return wc_table.visual_words .. ' words selected'
+				return wc_table.visual_words .. " words selected"
 			else
 				-- Regular word count
-				return tostring(wc_table.words) .. ' words'
+				return tostring(wc_table.words) .. " words"
 			end
 		end
-		
+
 		local function readingtime()
 			local wc_table = vim.fn.wordcount()
 			local words = wc_table.visual_words or wc_table.words
-			return tostring(math.ceil(words / 200.0)) .. ' min'
+			return tostring(math.ceil(words / 200.0)) .. " min"
 		end
-		
+
 		local function is_markdown()
-			return vim.bo.filetype == "markdown" or vim.bo.filetype == "asciidoc"
+			return vim.bo.filetype == "markdown" or vim.bo.filetype == "asciidoc" or vim.bo.filetype == "quarto"
 		end
-		
+
 		-- Scrollbar function - shows position in file with unicode block characters
 		local function scrollbar()
 			local sbar_chars = {
-				'▔', -- top
-				'🮂',
-				'🬂',
-				'🮃',
-				'▀',
-				'▄',
-				'▃',
-				'🬭',
-				'▂',
-				'▁', -- bottom
+				"▔", -- top
+				"🮂",
+				"🬂",
+				"🮃",
+				"▀",
+				"▄",
+				"▃",
+				"🬭",
+				"▂",
+				"▁", -- bottom
 			}
-			
+
 			local cur_line = vim.api.nvim_win_get_cursor(0)[1]
 			local lines = vim.api.nvim_buf_line_count(0)
-			
+
 			local i = math.floor((cur_line - 1) / lines * #sbar_chars) + 1
 			return string.rep(sbar_chars[i], 2)
 		end
-		
+
 		require("lualine").setup({
 			options = {
 				theme = "gruvbox-material",
@@ -94,6 +94,7 @@ return {
 						sources = { "nvim_lsp" },
 						symbols = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " },
 					},
+                    "g:obsidian",
 					-- Add word count and reading time for markdown files
 					{ wordcount, cond = is_markdown },
 					{ readingtime, cond = is_markdown },

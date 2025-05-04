@@ -61,9 +61,9 @@ return {
 					},
 				},
 
-				marksman = {
-					filetypes = { "markdown", "quarto" },
-				},
+				-- marksman = {
+				-- 	filetypes = { "markdown", "quarto" },
+				-- },
 
 				ltex_plus = {
 					settings = {
@@ -176,7 +176,7 @@ return {
 				"pyright",
 				"matlab_ls",
 				"bashls",
-				"marksman",
+				-- "marksman",
 				"clangd",
 				"ltex_plus",
 				"vale_ls",

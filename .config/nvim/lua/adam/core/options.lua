@@ -3,6 +3,9 @@ local opt = vim.opt
 -- set spell
 opt.spelllang = "en_gb"
 opt.spell = true
+opt.encoding = "utf-8"
+opt.fileencoding = "utf-8"
+
 
 -- line numbers
 opt.relativenumber = true
