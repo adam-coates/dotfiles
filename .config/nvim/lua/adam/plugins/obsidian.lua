@@ -37,36 +37,7 @@ return {
 			img_folder = "999 - extra/images",
 		},
 		new_notes_location = "notes_subdir",
-		disable_frontmatter = false,
-
-		-- Optional, customize the frontmatter data for new notes.
-		---@return table
-		note_frontmatter_func = function(note)
-			-- Create a formatted date string for today in DD-MM-YYYY format
-			local current_date = os.date("%d-%m-%Y")
-
-			-- Define the frontmatter table with fields in the desired order
-			-- NOTE: This won't guarantee field order in all versions of Lua/Neovim
-			-- But will work in many common configurations
-			local out = {}
-
-			-- Set the fields in our desired order
-			out.title = note.title or ""
-			out.tags = { "" } -- This creates a YAML array with an empty item, which renders as "- "
-			out.location = ""
-			out.date = current_date
-
-			-- Preserve any existing metadata if present
-			if note.metadata ~= nil and not vim.tbl_isempty(note.metadata) then
-				for k, v in pairs(note.metadata) do
-					if k ~= "title" and k ~= "tags" and k ~= "location" and k ~= "date" then
-						out[k] = v
-					end
-				end
-			end
-
-			return out
-		end,
+		disable_frontmatter = true,
 
 		-- Optional, customize how note IDs are generated given an optional title.
 		---@param title string|?

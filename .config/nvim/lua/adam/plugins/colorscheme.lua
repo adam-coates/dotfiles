@@ -5,38 +5,38 @@ return {
         priority = 1001,
         init = function()
             vim.g.gruvbox_material_foreground = "material"
-            vim.g.gruvbox_material_transparent_background = 0
+            -- vim.g.gruvbox_material_transparent_background = 2
             vim.g.gruvbox_material_background = "soft"
             vim.g.gruvbox_material_ui_contrast = "high"
             vim.g.gruvbox_material_float_style = "bright"
-            vim.g.gruvbox_material_statusline_style = "material"
+            vim.g.gruvbox_material_statusline_style = "default"
             vim.g.gruvbox_material_cursor = "auto"
-            vim.g.gruvbox_material_colors_override = {
-                markbg1 = { "#2e1a1a", "52" },
-                markbg2 = { "#332616", "94" },
-                markbg3 = { "#3a3020", "100" },
-                markbg4 = { "#243218", "22" },
-                markbg5 = { "#1b2926", "23" },
-                markbg6 = { "#2e1a20", "52" }
-            }
+            -- vim.g.gruvbox_material_colors_override = {
+            --     markbg1 = { "#2e1a1a", "52" },
+            --     markbg2 = { "#332616", "94" },
+            --     markbg3 = { "#3a3020", "100" },
+            --     markbg4 = { "#243218", "22" },
+            --     markbg5 = { "#1b2926", "23" },
+            --     markbg6 = { "#2e1a20", "52" }
+            -- }
         end,
         config = function()
             -- Create the autocommand group and command before setting the colorscheme
-            vim.api.nvim_create_autocmd("ColorScheme", {
-                group = vim.api.nvim_create_augroup("custom_highlights_gruvboxmaterial", {}),
-                pattern = "gruvbox-material",
-                callback = function()
-                    local config = vim.fn["gruvbox_material#get_configuration"]()
-                    local palette = vim.fn["gruvbox_material#get_palette"](config.background, config.foreground, config.colors_override)
-                    local set_hl = vim.fn["gruvbox_material#highlight"]
-                    set_hl("RenderMarkdownH1Bg", palette.none, palette.markbg1)
-                    set_hl("RenderMarkdownH2Bg", palette.none, palette.markbg2)
-                    set_hl("RenderMarkdownH3Bg", palette.none, palette.markbg3)
-                    set_hl("RenderMarkdownH4Bg", palette.none, palette.markbg4)
-                    set_hl("RenderMarkdownH5Bg", palette.none, palette.markbg5)
-                    set_hl("RenderMarkdownH6Bg", palette.none, palette.markbg6)
-                end
-            })
+            -- vim.api.nvim_create_autocmd("ColorScheme", {
+            --     group = vim.api.nvim_create_augroup("custom_highlights_gruvboxmaterial", {}),
+            --     pattern = "gruvbox-material",
+            --     callback = function()
+            --         local config = vim.fn["gruvbox_material#get_configuration"]()
+            --         local palette = vim.fn["gruvbox_material#get_palette"](config.background, config.foreground, config.colors_override)
+            --         local set_hl = vim.fn["gruvbox_material#highlight"]
+            --         set_hl("RenderMarkdownH1Bg", palette.none, palette.markbg1)
+            --         set_hl("RenderMarkdownH2Bg", palette.none, palette.markbg2)
+            --         set_hl("RenderMarkdownH3Bg", palette.none, palette.markbg3)
+            --         set_hl("RenderMarkdownH4Bg", palette.none, palette.markbg4)
+            --         set_hl("RenderMarkdownH5Bg", palette.none, palette.markbg5)
+            --         set_hl("RenderMarkdownH6Bg", palette.none, palette.markbg6)
+            --     end
+            -- })
 
             -- Set the colorscheme after creating the autocommand
             vim.cmd.colorscheme("gruvbox-material")

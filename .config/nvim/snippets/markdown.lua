@@ -140,4 +140,37 @@ return {
 			t("fMRI"),
 		})
 	),
+	s("box", {
+		t("```"),
+		t({ "", "" }),
+		f(function(args)
+			local text = args[1][1] or ""
+			local width = #text
+			return "┌" .. string.rep("─", width + 2) .. "┐"
+		end, { 1 }),
+		t({ "", "│ " }),
+		i(1, "text"),
+		t({ " │", "" }),
+		f(function(args)
+			local text = args[1][1] or ""
+			local width = #text
+			return "└" .. string.rep("─", width + 2) .. "┘"
+		end, { 1 }),
+		t({ "", "" }),
+		t("```"),
+		i(0),
+	}),
+	s("div-box", {
+		t("```{=html}"),
+		t({
+			"",
+			'<div style="border: 1px solid #333; padding: 0.5em 1em; margin: 1em 0; border-radius: 4px; text-align: center; display: block;">',
+		}),
+		t({ "", "  " }),
+		i(1, "text"),
+		t({ "", "" }),
+		t("</div>"),
+		t({ "", "```" }),
+		i(0),
+	}),
 }

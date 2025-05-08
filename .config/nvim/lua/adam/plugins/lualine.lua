@@ -57,7 +57,7 @@ return {
 
 		require("lualine").setup({
 			options = {
-				theme = "gruvbox-material",
+				theme = "auto",
 				globalstatus = true,
 				icons_enabled = true,
 				component_separators = { left = "|", right = "|" },
@@ -94,7 +94,7 @@ return {
 						sources = { "nvim_lsp" },
 						symbols = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " },
 					},
-                    "g:obsidian",
+					"g:obsidian",
 					-- Add word count and reading time for markdown files
 					{ wordcount, cond = is_markdown },
 					{ readingtime, cond = is_markdown },
