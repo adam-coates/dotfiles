@@ -18,7 +18,8 @@ return {
 			"saghen/blink.cmp",
 			{ "antosha417/nvim-lsp-file-operations", config = true },
 			{
-				"williamboman/mason.nvim",
+				"mason-org/mason.nvim",
+				version = "1.11.0",
 				build = ":MasonUpdate",
 				opts = {
 					registries = {
@@ -27,10 +28,11 @@ return {
 					},
 				},
 			},
-			"williamboman/mason-lspconfig.nvim",
-			"WhoIsSethDaniel/mason-tool-installer.nvim",
-			-- Uncomment if you want to use schemastore for YAML
-			-- "b0o/schemastore.nvim",
+            {
+                "mason-org/mason-lspconfig.nvim",
+                version = "^1.0.0",
+            },
+            "WhoIsSethDaniel/mason-tool-installer.nvim",
 		},
 		config = function()
 			local capabilities = require("blink.cmp").get_lsp_capabilities()

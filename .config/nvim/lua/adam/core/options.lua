@@ -46,6 +46,8 @@ opt.iskeyword:append("-")
 -- leave 8 rows bottom and top while scrolling
 opt.scrolloff = 8
 
+opt.cmdheight = 1
+
 -- undos saved
 opt.swapfile = false
 opt.backup = false
