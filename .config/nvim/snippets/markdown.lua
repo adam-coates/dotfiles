@@ -65,7 +65,7 @@ return {
 		{ condition = line_begin }
 	),
 
-	s({ trig = "table(%d+)x(%d+)", regTrig = true }, {
+	s({ trig = "table(%d+)x(%d+)", regTrig = true, snippetType = 'autosnippet' }, {
 		---@diagnostic disable-next-line: unused-local
 		d(1, function(args, snip)
 			local nodes = {}

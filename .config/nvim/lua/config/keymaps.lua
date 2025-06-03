@@ -137,6 +137,8 @@ local function get_otter_symbols_lang()
   vim.lsp.buf_request(main_nr, ms.textDocument_documentSymbol, params, nil)
 end
 
+
+
 vim.keymap.set("n", "<m-s>", get_otter_symbols_lang, {desc = "otter [s]ymbols"})
 
 keymap.set("n", "<m-I>", insert_py_chunk, {desc = "python code chunk"})
@@ -214,6 +216,43 @@ keymap.set("n", "<leader>on", function()
   vim.cmd("cd " .. original_cwd)
 end, { desc = "Create Obsidian note with template" })
 
+function _G.rename_buffer_from_selection()
+    -- Get the range of selected text in visual mode
+    local start_pos = vim.fn.getpos("'<")
+    local end_pos = vim.fn.getpos("'>")
+
+    local start_line, start_col = start_pos[2], start_pos[3]
+    local end_line, end_col = end_pos[2], end_pos[3]
+
+    -- Ensure only one line is selected
+    if start_line ~= end_line then
+        print("Selection spans multiple lines. Only single-line selection is allowed.")
+        return
+    end
+
+    -- Get the selected text in the current buffer
+    local current_line = vim.fn.getline(start_line)
+    local selected_text = string.sub(current_line, start_col, end_col)
+
+    -- Trim whitespace and add ".md" extension for renaming
+    selected_text = vim.trim(selected_text) .. ".md"
+
+    -- Rename the buffer (and file) if it's a real file
+    local current_path = vim.api.nvim_buf_get_name(0)
+    if current_path ~= "" then
+        local new_path = vim.fn.fnamemodify(current_path, ":h") .. "/" .. selected_text
+        vim.cmd("file " .. new_path)
+        print("Renamed buffer to " .. new_path)
+    else
+        print("Buffer is not associated with a file.")
+    end
+end
+vim.api.nvim_set_keymap(
+	"v",
+	"<leader>rrr",
+	[[:<C-u>lua _G.rename_buffer_from_selection()<CR>]],
+	{ noremap = true, silent = true }
+)
 
 -- Bold: position cursor between **
 vim.keymap.set('v', '<leader>b', 'c****<Esc>hhp')
@@ -226,7 +265,6 @@ vim.keymap.set('v', '<leader>bi', 'c******<Esc>hhhp')
 
 
 -- Search for files in notes
-vim.keymap.set("n", "<leader>os", ":Telescope find_files search_dirs={\"/home/adam/notes\"}<cr>", {desc = "find notes files"})
 vim.keymap.set("n", "<leader>oz", ":Telescope live_grep search_dirs={\"/home/adam/notes\"}<cr>", {desc = "grep notes"})
 
 vim.keymap.set("n", "j", "gj", { noremap = true, silent = true })

@@ -8,6 +8,9 @@ return {
 		"nvim-telescope/telescope.nvim",
 		"nvim-treesitter/nvim-treesitter",
 	},
+	keys = {
+		{ "<leader>os", ":ObsidianSearch<cr>", desc = "Obsidian Search" },
+	},
 	opts = {
 		workspaces = {
 			{
@@ -55,21 +58,6 @@ return {
 				return "untitled_" .. suffix
 			end
 		end,
-		-- Optional, customize how note file names are generated given the ID, target directory, and title.
-		---@param spec { id: string, dir: obsidian.Path, title: string|? }
-		---@return string|obsidian.Path The full path to the new note.
-		-- note_path_func = function(spec)
-		-- 	-- Use the id (which is now the untransformed title) directly
-		-- 	local id_str = tostring(spec.id)
-		--
-		-- 	-- Add .md extension only if it doesn't already have one
-		-- 	if not string.match(id_str, "%.md$") then
-		-- 		return spec.dir / (id_str .. ".md")
-		-- 	else
-		-- 		-- If it already ends with .md, use as is
-		-- 		return spec.dir / id_str
-		-- 	end
-		-- end,
 		statusline = {
 			enabled = true,
 			format = "{{backlinks}} backlinks",

@@ -29,7 +29,7 @@ return {
 					end
 				end,
 			},
-			opts = { history = true, delete_check_events = "TextChanged" },
+			opts = { history = true, delete_check_events = "TextChanged", enable_autosnippets = true },
 		}, -- snippet engine
 		"onsails/lspkind.nvim", -- vs-code like pictograms
 		{
