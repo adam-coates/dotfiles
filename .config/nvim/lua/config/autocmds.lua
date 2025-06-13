@@ -56,7 +56,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
 		vim.keymap.set(
 			"n",
-			"<leader>v",
+			"<leader>vgd",
 			"<cmd>vsplit | lua vim.lsp.buf.definition()<cr>",
 			{ desc = "Goto Definition in Vertical Split" }
 		)
@@ -111,3 +111,4 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 		end
 	end,
 })
+

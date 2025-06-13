@@ -19,7 +19,7 @@ return {
 				graphql = { "prettier" },
 				liquid = { "prettier" },
 				lua = { "stylua" },
-				python = { "isort", "black" },
+				python = { "ruff", "ruff_fix", "ruff_format", "ruff_organize_imports" },
 			},
 		})
 

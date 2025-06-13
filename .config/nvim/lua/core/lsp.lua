@@ -2,8 +2,8 @@ vim.lsp.enable({
 	"html",
 	"cssls",
 	"tailwindcss",
-	"lua-ls",
-	"pyright",
+	"lua_ls",
+	"basedpyright",
 	"matlab_ls",
 	"bashls",
 	"clangd",
@@ -11,6 +11,8 @@ vim.lsp.enable({
 	"vale_ls",
 	"harper_ls",
 	"r_language_server",
+    "gopls",
+    "ruff",
 })
 
 vim.diagnostic.config({
