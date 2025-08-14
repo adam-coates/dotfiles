@@ -138,8 +138,10 @@ return {
 					opts = {
 						prefix_min_len = 4,
 						score_offset = 10, -- should be lower priority
-						max_filesize = "300K",
-						search_casing = "--smart-case",
+                        ripgrep = {
+						    max_filesize = "300K",
+						    search_casing = "--smart-case",
+                        },
 					},
 				},
 				references = {

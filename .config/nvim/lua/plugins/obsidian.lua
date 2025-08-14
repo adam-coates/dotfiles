@@ -3,15 +3,15 @@ return {
 	lazy = true,
 	ft = "markdown",
 	dependencies = {
-		"nvim-lua/plenary.nvim",
 		"saghen/blink.cmp",
 		"nvim-telescope/telescope.nvim",
 		"nvim-treesitter/nvim-treesitter",
 	},
 	keys = {
-		{ "<leader>os", ":ObsidianSearch<cr>", desc = "Obsidian Search" },
+		{ "<leader>os", ":Obsidian search<cr>", desc = "Obsidian Search" },
 	},
 	opts = {
+        legacy_commands = false,
 		workspaces = {
 			{
 				name = "notes",
@@ -58,8 +58,9 @@ return {
 				return "untitled_" .. suffix
 			end
 		end,
-		statusline = {
+		footer = {
 			enabled = true,
+            separator = "",
 			format = "{{backlinks}} backlinks",
 		},
 	},

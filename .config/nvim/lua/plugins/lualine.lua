@@ -94,7 +94,6 @@ return {
 						sources = { "nvim_lsp" },
 						symbols = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " },
 					},
-					"g:obsidian",
 					-- Add word count and reading time for markdown files
 					{ wordcount, cond = is_markdown },
 					{ readingtime, cond = is_markdown },

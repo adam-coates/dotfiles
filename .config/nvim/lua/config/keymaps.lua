@@ -211,7 +211,7 @@ keymap.set("n", "<leader>on", function()
 
   vim.cmd("cd ~/notes")
 
-  vim.cmd(":ObsidianTemplate note")
+  vim.cmd(":Obsidian template note")
 
   vim.cmd("cd " .. original_cwd)
 end, { desc = "Create Obsidian note with template" })

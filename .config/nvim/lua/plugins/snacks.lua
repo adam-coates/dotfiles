@@ -2,19 +2,12 @@ return {
 	"folke/snacks.nvim",
 	priority = 1000,
 	lazy = false,
-	---@type snacks.Config
 	opts = {
 		animate = { enable = false },
 		bigfile = { enabled = true },
 		dashboard = {
 			preset = {
-				header = [[
-███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗
-████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║
-██╔██╗ ██║█████╗  ██║   ██║██║   ██║██║██╔████╔██║
-██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║
-██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
-╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝]],
+				header = [[]],
 				keys = {
 					{ icon = " ", key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
 					{ icon = " ", key = "n", desc = "New File", action = ":ene | startinsert" },
