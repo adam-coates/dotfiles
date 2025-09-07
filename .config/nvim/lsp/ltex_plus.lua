@@ -26,7 +26,7 @@ return {
 				"xhtml",
 			},
 			language = "en-US",
-			languageModel = "~/models/ngrams/",
+			languageModel = "/run/media/adam/f68df5d2-81b1-4947-85c8-ed91e36b2051/adam/models/ngrams",
 			disabledRules = {
 				["en-US"] = {
 					"MORFOLOGIK_RULE_EN_US",

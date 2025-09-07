@@ -21,7 +21,9 @@ return {
     -- Breaks if we don't have at least `settings = { python = {} }` here.
     -- Where possible, configure using pyproject.toml instead.
     -- That way all developers share the same settings.
-    settings = {},
+    settings = {
+        logLevel = 'debug',
+    },
     	capabilities = vim.tbl_deep_extend(
 		"force",
 		{},

@@ -47,7 +47,26 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		end, { desc = "Go to next diagnostic" }) -- jump to next diagnostic in buffer
 
 		vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "Show documentation for what is under cursor" }) -- show documentation for what is under cursor
-
+		-- vim.keymap.set("n", "K", function()
+		-- 	local cword = vim.fn.expand("<cword>")
+		--
+		-- 	-- First try LSP hover
+		-- 	local bufnr = vim.api.nvim_get_current_buf()
+		-- 	local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
+		-- 	if #clients > 0 then
+		-- 		-- call hover but also check if it's empty
+		-- 		vim.lsp.buf.hover()
+		-- 		return
+		-- 	end
+		--
+		-- 	-- If no LSP hover available, try :Man
+		-- 	-- (only if the word is actually a command with a man page)
+		-- 	if vim.fn.executable(cword) == 1 or vim.fn.has("unix") == 1 then
+		-- 		vim.cmd("Man " .. cword)
+		-- 	else
+		-- 		vim.notify("No hover or manpage found for " .. cword, vim.log.levels.INFO)
+		-- 	end
+		-- end, { desc = "Smart hover (LSP or man)" })
 		vim.keymap.set("n", "<leader>rs", ":LspRestart<CR>", { desc = "Restart LSP" })
 
 		vim.keymap.set("n", "<space>ca", vim.lsp.buf.code_action, { buffer = 0, desc = "Code action" })
@@ -111,4 +130,3 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 		end
 	end,
 })
-

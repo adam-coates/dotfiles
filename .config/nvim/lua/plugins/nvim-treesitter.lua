@@ -1,7 +1,6 @@
 return {
 	"nvim-treesitter/nvim-treesitter",
-	branch = "master",
-	event = { "BufReadPre", "BufNewFile" },
+    dev = false,
 	build = ":TSUpdate",
 	dependencies = {
 		{
@@ -11,7 +10,6 @@ return {
 				require("nvim-ts-autotag").setup({})
 			end,
 		},
-        "OXY2DEV/markview.nvim",
 	},
 	config = function()
 		require("nvim-treesitter.configs").setup({
