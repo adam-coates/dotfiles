@@ -75,6 +75,16 @@ return {
 			enabled = true,
 		},
 		input = { enabled = true },
+        image = { 
+            enabled = true,
+            doc = {
+                enabled = true,
+                inline = true,
+                float = false,
+                max_width = 80,
+                max_height = 40,
+            },
+        },
 		lazygit = { enabled = true },
 		notifier = {
 			enabled = true,
