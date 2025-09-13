@@ -27,7 +27,7 @@ return {
 		},
 
 		templates = {
-			folder = "999 - extra/Templates",
+			folder = "999-extra/Templates",
 			date_format = "%d-%m-%Y",
 			substitutions = {
 				citation_title = function()
@@ -37,9 +37,10 @@ return {
 		},
 		notes_subdir = "00 - Inbox", --all new notes go into the inbox
 		attachments = {
-			img_folder = "999 - extra/images",
+			img_folder = "999-extra/images",
 		},
 		new_notes_location = "notes_subdir",
+        preferred_link_style = "markdown",
 		disable_frontmatter = true,
 
 		-- Optional, customize how note IDs are generated given an optional title.
