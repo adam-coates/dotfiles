@@ -1,7 +1,7 @@
 #!/bin/bash
 # ~/.local/bin/obsidian-inkscape
 
-IMAGES_DIR="/home/adam/notes/999 - extra/images"
+IMAGES_DIR="/home/adam/notes/999-extra/images"
 TEMPLATE_FILE="${IMAGES_DIR}/template.svg"
 
 name="$1"
@@ -20,7 +20,7 @@ svg_file="${IMAGES_DIR}/${sanitized_name}.svg"
 cp "$TEMPLATE_FILE" "$svg_file"
 
 # Open Inkscape
-inkscape "$svg_file" >/dev/null 2>&1 &
+GDK_BACKEND=x11 exec /usr/bin/inkscape "$svg_file" >/dev/null 2>&1 &
 
 # Output the markdown syntax for Neovim to insert (on single line, no trailing newline)
-printf "![%s](./999\\ -\\ extra/images/%s.svg)" "$name" "$sanitized_name"
+printf "![%s](%s/%s.svg)" "$name" "$IMAGES_DIR" "$sanitized_name"
