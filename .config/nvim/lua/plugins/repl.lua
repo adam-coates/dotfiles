@@ -1,11 +1,9 @@
 return {
 	{
 		"benlubas/molten-nvim",
-		dependencies = { "3rd/image.nvim" },
 		build = ":UpdateRemotePlugins",
 		init = function()
 			-- these are examples, not defaults. Please see the readme
-			vim.g.molten_image_provider = "image.nvim"
 			vim.g.molten_output_win_max_height = 50
             vim.g.molten_auto_image_popup = 1
             vim.g.molten_image_location = "virt"

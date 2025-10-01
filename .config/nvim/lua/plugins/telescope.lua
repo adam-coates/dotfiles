@@ -40,7 +40,7 @@ return {
 		telescope.setup({
 			defaults = {
 				path_display = { "truncate " },
-				layout_strategy = "vertical",
+				layout_strategy = "horizontal",
 				mappings = {
 					i = {
 						["<C-k>"] = actions.move_selection_previous,
