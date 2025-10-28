@@ -76,7 +76,7 @@ return {
 		},
 		input = { enabled = true },
         image = { 
-            enabled = true,
+            enabled = false,
             doc = {
                 enabled = true,
                 inline = true,
