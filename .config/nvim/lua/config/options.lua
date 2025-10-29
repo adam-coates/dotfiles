@@ -54,11 +54,11 @@ opt.backup = false
 opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
 opt.undofile = true
 
-vim.o.foldenable = true
-vim.o.foldlevel = 99
-vim.o.foldmethod = 'expr'
+opt.foldenable = true
+opt.foldlevel = 99
+opt.foldmethod = 'expr'
 -- Default to treesitter folding
-vim.o.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+opt.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
 -- Prefer LSP folding if client supports it
 vim.api.nvim_create_autocmd('LspAttach', {
     callback = function(args)
@@ -69,9 +69,12 @@ vim.api.nvim_create_autocmd('LspAttach', {
         end
     end,
  })
-vim.o.foldtext = ""
-vim.opt.foldcolumn = "0"
-vim.opt.fillchars:append({fold = " "})
+opt.foldtext = ""
+opt.foldcolumn = "0"
+opt.fillchars:append({fold = " "})
+
+opt.winborder = "single"
+
 
 -- Define the markdown_fold function as a global function
 --

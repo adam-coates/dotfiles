@@ -41,7 +41,9 @@ return {
 		},
 		new_notes_location = "notes_subdir",
         preferred_link_style = "markdown",
-		disable_frontmatter = true,
+        frontmatter = {
+            enabled = false,
+        },
 
 		-- Optional, customize how note IDs are generated given an optional title.
 		---@param title string|?
