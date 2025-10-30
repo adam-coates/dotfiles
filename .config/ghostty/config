@@ -1,10 +1,25 @@
-font-family = "TX-02"
+# Dynamic theme colors
+config-file = ?"~/.config/omarchy/current/theme/ghostty.conf"
 
-theme = "gruvbox-material"
+# Font
+font-family = "TX02 Nerd Font"
+font-style = Regular
+font-size = 12
+adjust-cell-height = 35%
+# Window
+window-padding-x = 5
+window-padding-y = 5
+confirm-close-surface=false
+resize-overlay = never
 
-window-decoration = false
+# Cursor stlying
+cursor-style = "block"
+cursor-style-blink = false
+shell-integration-features = no-cursor
 
-gtk-tabs-location = bottom
+# Keyboard bindings
+keybind = f11=toggle_fullscreen
+keybind = shift+insert=paste_from_clipboard
+keybind = control+insert=copy_to_clipboard
 
-
-background-blur-radius = 0
+mouse-scroll-multiplier = 0.25
