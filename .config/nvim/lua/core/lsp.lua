@@ -14,6 +14,7 @@ vim.lsp.enable({
     "gopls",
     "ruff",
     "astro-ls",
+    "rust-analyzer",
 })
 
 vim.diagnostic.config({
