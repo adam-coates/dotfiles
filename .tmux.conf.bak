@@ -99,14 +99,8 @@ set -g @plugin 'tmux-plugins/tmux-sensible'
 set -g @plugin 'tmux-plugins/tmux-resurrect'
 set -g @plugin 'tmux-plugins/tmux-continuum'
 set -g @plugin 'christoomey/vim-tmux-navigator'
-set -g @plugin "adibhanna/gruvbox-tmux"
 set -g @plugin 'olimorris/tmux-pomodoro-plus'
-
-set -g @gruvbox-theme dark # dark or light
-
-# Optional: Configure GitHub status display (default: on)
-set -g @gruvbox-tmux_github_status on # on or off
-set -g @gruvbox-tmux_window_id_style none
+# set -g @plugin 'tmux-plugins/tmux-cpu'
 
 set -g @resurrect-capture-pane-contents 'on'
 set -g @continuum-restore 'on'
@@ -118,19 +112,79 @@ set -g visual-activity off
 
 set -g @pomodoro_granularity 'on'
 set -g status-interval 1  
-GREEN="#a9b665"
-YELLOW="#d8a657"
-MAGENTA="#d3869b"
-CYAN="#89b482"
+
 
 ## COLORSCHEME: gruvbox dark (medium)
 set-option -g status "on"
+
+
+RED="#ea6962"
+GREEN="#a9b665"
+YELLOW="#d8a657"
+BLUE="#7daea3"
+MAGENTA="#d3869b"
+CYAN="#89b482"
+BLACK="#1d2021"
+DARK_GRAY="#32302F"
+LIGHT_GRAY="#4F4946"
+BG="#32302F"
+FG="#d4be98"
+
+# Nerdfont characters 
+HALF_ROUND_OPEN=""
+HALF_ROUND_CLOSE=""
+TRIANGLE_OPEN=""
+TRIANGLE_CLOSE=""
+
+# Uncomment to move statusbar to the top
+# set-option -g status-position top
+
+# Basic colors of the Statusbar
+set-option -g status-style fg=$FG,bg=${BG}
+
+# Show the window list centered between the left and the right section
+set-option -g status-justify centre
+
+# Style and set contents on the left section
+set-option -g status-left "\
+#[fg=${LIGHT_GRAY},bg=default]${HALF_ROUND_OPEN}\
+#[bg=${LIGHT_GRAY},fg=${YELLOW}]#S \
+#[fg=${LIGHT_GRAY},bg=default]${TRIANGLE_CLOSE}\
+"
+
+# Style and set contents on the right section
 set -g @pomodoro_on "#[fg=$MAGENTA]  "
 set -g @pomodoro_complete "#[fg=$GREEN] "
 set -g @pomodoro_pause "#[fg=$YELLOW] ⏸︎ "
 set -g @pomodoro_prompt_break "#[fg=$CYAN]🕤 ? "
 set -g @pomodoro_prompt_pomodoro "#[fg=$color_gray]🕤 ? "
 set-option -g status-right "#{pomodoro_status}"
+
+
+# Set max length of left and right section
+set-option -g status-left-length 100
+set-option -g status-right-length 100
+
+# Style and set content for the inactive windows
+set-option -g window-status-format "\
+#[bg=${BG}] \
+#[fg=${FG},bg=${BG}]#I\
+#[fg=${MAGENTA}, bg=${BG}]:\
+#[fg=$FG, bg=${BG}]#W\
+ \
+"
+
+# Style and set content for the active windows
+set-option -g window-status-current-format "\
+#[fg=${LIGHT_GRAY},bg=$BG]${HALF_ROUND_OPEN}\
+#[bg=${LIGHT_GRAY},fg=$FG]#I\
+#[fg=${RED}]:\
+#[fg=$FG]#W\
+#[fg=${LIGHT_GRAY},bg=$BG]${HALF_ROUND_CLOSE}\
+"
+
+# Remove the separator between window list items, as we already have spacing
+# "around" inactive items
 
 set-option -g window-status-separator ""
 
