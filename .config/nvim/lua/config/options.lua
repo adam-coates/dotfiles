@@ -75,6 +75,8 @@ opt.fillchars:append({fold = " "})
 
 opt.winborder = "single"
 
+opt.cmdheight = 0
+
 
 -- Define the markdown_fold function as a global function
 --

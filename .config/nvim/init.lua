@@ -3,6 +3,9 @@ require("config.options")
 require("config.autocmds")
 require("core.lazy")
 require("core.lsp")
+require("globals")
+require("ui.statusline")
+
 package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?/init.lua"
 package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua"
 

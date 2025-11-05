@@ -25,7 +25,7 @@ return {
       buftypes = {},
     },
     show_guides = true,
-    open_automatic = false,
+    open_automatic = false, 
         -- function()
     --   local aerial = require("aerial")
     --   return vim.api.nvim_win_get_width(0) > 80 and not aerial.was_closed()
@@ -37,3 +37,4 @@ return {
     vim.keymap.set("n", "<F18>", "<cmd>AerialToggle<cr>", { silent = true })
   end,
 }
+

@@ -57,7 +57,7 @@ return {
 	--
 	-- 	require("lualine").setup({
 	-- 		options = {
-	-- 			theme = "gruvbox_dark",
+	-- 			theme = "auto",
 	-- 			globalstatus = true,
 	-- 			icons_enabled = true,
 	-- 			component_separators = { left = "|", right = "|" },
