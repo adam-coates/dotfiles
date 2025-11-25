@@ -32,10 +32,10 @@ return {
 			opts = { history = true, delete_check_events = "TextChanged", enable_autosnippets = true },
 		}, -- snippet engine
 		"onsails/lspkind.nvim", -- vs-code like pictograms
-		{
-			"jmbuhr/cmp-pandoc-references",
-			ft = { "quarto", "markdown", "rmarkdown" },
-		},
+		-- {
+		-- 	"jmbuhr/cmp-pandoc-references",
+		-- 	ft = { "quarto", "markdown", "rmarkdown" },
+		-- },
 	},
 	version = "1.*",
 	opts = {
@@ -90,7 +90,7 @@ return {
 		-- Default list of enabled providers defined so that you can extend it
 		-- elsewhere in your config, without redefining it, due to `opts_extend`
 		sources = {
-			default = { "lsp", "path", "snippets", "buffer", "ripgrep", "references" },
+			default = { "lsp", "path", "snippets", "buffer", "ripgrep"},
 			providers = {
 				lsp = {
 					name = "LSP",
@@ -143,10 +143,6 @@ return {
 						    search_casing = "--smart-case",
                         },
 					},
-				},
-				references = {
-					name = "pandoc_references",
-					module = "cmp-pandoc-references.blink",
 				},
 			},
 		},

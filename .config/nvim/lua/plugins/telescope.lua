@@ -6,34 +6,34 @@ return {
 		"nvim-lua/plenary.nvim",
 		{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
 		"nvim-tree/nvim-web-devicons",
-		{
-			"jmbuhr/telescope-zotero.nvim",
-			dependencies = {
-				{ "kkharji/sqlite.lua" },
-			},
-			config = function()
-				-- This is the key addition - directly configuring the zotero plugin
-				require("zotero").setup({
-					zotero_db_path = "/home/adam/Zotero/zotero.sqlite",
-					better_bibtex_db_path = "/home/adam/Zotero/better-bibtex.sqlite",
-					zotero_storage_path = "/home/adam/Nextcloud/zotero/",
-					pdf_opener = "xdg-open",
-					annotation_grouping = "highlight",
-	                headings = "on",
-					annotation_color_headings = {
-						["#ffd400"] = "#### ✅ Key Points",
-						["#ff6666"] = "#### Background",
-						["#5fb236"] = "#### Hypothesis",
-						["#2ea8e5"] = "#### Methods",
-						["#a28ae5"] = "#### Results",
-						["#e56eee"] = "#### Conclusions",
-						["#f19837"] = "#### Implications",
-						["#aaaaaa"] = "#### Further Reading",
-					},
-				})
-			end,
-		},
-	},
+	-- 	{
+	-- 		"jmbuhr/telescope-zotero.nvim",
+	-- 		dependencies = {
+	-- 			{ "kkharji/sqlite.lua" },
+	-- 		},
+	-- 		config = function()
+	-- 			-- This is the key addition - directly configuring the zotero plugin
+	-- 			require("zotero").setup({
+	-- 				zotero_db_path = "/home/adam/Zotero/zotero.sqlite",
+	-- 				better_bibtex_db_path = "/home/adam/Zotero/better-bibtex.sqlite",
+	-- 				zotero_storage_path = "/home/adam/Nextcloud/zotero/",
+	-- 				pdf_opener = "xdg-open",
+	-- 				annotation_grouping = "highlight",
+	--                 headings = "on",
+	-- 				annotation_color_headings = {
+	-- 					["#ffd400"] = "#### ✅ Key Points",
+	-- 					["#ff6666"] = "#### Background",
+	-- 					["#5fb236"] = "#### Hypothesis",
+	-- 					["#2ea8e5"] = "#### Methods",
+	-- 					["#a28ae5"] = "#### Results",
+	-- 					["#e56eee"] = "#### Conclusions",
+	-- 					["#f19837"] = "#### Implications",
+	-- 					["#aaaaaa"] = "#### Further Reading",
+	-- 				},
+	-- 			})
+	-- 		end,
+	-- 	},
+	 },
 	config = function()
 		local telescope = require("telescope")
 		local actions = require("telescope.actions")
@@ -64,7 +64,7 @@ return {
 		})
 		telescope.load_extension("fzf")
 		telescope.load_extension("ui-select")
-		telescope.load_extension("zotero")
+	-- telescope.load_extension("zotero")
 
 		-- Your keymaps remain the same
 		local keymap = vim.keymap
