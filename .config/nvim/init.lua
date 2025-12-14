@@ -10,7 +10,7 @@ package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/shar
 package.path = package.path .. ";" .. vim.fn.expand("$HOME") .. "/.luarocks/share/lua/5.1/?.lua"
 
 
-vim.g.python3_host_prog = vim.fn.expand('~/.config/nvim/venv/bin/python')
+vim.g.python3_host_prog = vim.fn.expand('~/.config/nvim/venv/bin/python3')
 
 local function create_obsidian_figure()
   -- Get the current line (figure name)

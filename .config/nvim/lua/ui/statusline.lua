@@ -233,5 +233,9 @@ end
 vim.o.statusline = "%!v:lua.require('ui.statusline').render()"
 
 vim.api.nvim_set_hl(0, "StatusLine", { bg = "#282828" })
-
+vim.api.nvim_create_autocmd("DiagnosticChanged", {
+  callback = function()
+    vim.cmd("redrawstatus")
+  end,
+})
 return M

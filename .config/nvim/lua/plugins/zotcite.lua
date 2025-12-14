@@ -8,8 +8,7 @@ return {
     config = function()
         require("zotcite").setup({
             zotero_sqlite_path = "/home/adam/Zotero/zotero.sqlite",
-            tmpdir = "/tmp/zotcite-copy",
-            key_type = "zotero", -- or "template" or "zotero"
+            key_type = "better-bibtex", -- or "template" or "zotero"
             attach_dir = "/home/adam/Nextcloud/zotero",
             open_in_zotero = true,
         })
