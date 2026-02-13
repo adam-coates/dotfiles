@@ -1,12 +1,12 @@
 return {
 	"folke/which-key.nvim",
 	event = "VeryLazy",
-    opts = {
-        preset = "helix",
-    },
+	opts = {
+		preset = "helix",
+	},
 	config = function(_, opts)
-        local wk = require("which-key")
-        wk.setup(opts)
+		local wk = require("which-key")
+		wk.setup(opts)
 		wk.add({
 			{
 				{ "<leader>c", group = "Code" },
@@ -15,15 +15,15 @@ return {
 				{ "<leader>r", group = "Smart Rename/ RestartLSP" },
 				{ "<leader>t", group = "Tab" },
 				{ "z", group = "Folding" },
-                { "[", group = "Jump backwards"},
-                { "]", group = "Jump forwards" },
-                { "<leader>\\", group = "Toggle"},
-                { "g", group = "LSP"},
-                { "<leader>l", group = "[L]azy [G]it"},
-                { "<leader>m", group = "[M]ake [P]retty"},
-                { "<leader>o", group = "[O]bsidian"},
-                { "<leader>d", group = "[D]ebug"}
-				},
+				{ "[", group = "Jump backwards" },
+				{ "]", group = "Jump forwards" },
+				{ "<leader>\\", group = "Toggle" },
+				{ "g", group = "LSP" },
+				{ "<leader>l", group = "[L]azy [G]it" },
+				{ "<leader>m", group = "[M]ake [P]retty" },
+				{ "<leader>o", group = "[O]bsidian" },
+				{ "<leader>d", group = "[D]ebug" },
+			},
 		})
 	end,
 }

@@ -1,50 +1,45 @@
 return {
-	"nvim-treesitter/nvim-treesitter",
-    dev = false,
-	build = ":TSUpdate",
-	dependencies = {
-		{
-			"windwp/nvim-ts-autotag",
-			event = "InsertEnter",
-			config = function()
-				require("nvim-ts-autotag").setup({})
-			end,
-		},
-	},
-	config = function()
-		require("nvim-treesitter.configs").setup({
-			highlight = {
-				enable = true,
-			},
-			indent = { enable = true },
-			ensure_installed = {
-				"python",
-				"matlab",
-				"json",
-				"javascript",
-				"typescript",
-				"yaml",
-				"html",
-				"css",
-				"markdown",
-				"markdown_inline",
-				"bash",
-				"lua",
-				"vim",
-				"dockerfile",
-				"gitignore",
-				"r",
-			},
-			auto_install = true,
-			incremental_selection = {
-				enable = true,
-				keymaps = {
-					init_selection = "gnn",
-					node_incremental = "gnn",
-					scope_incremental = false,
-					node_decremental = "<bs>",
-				},
-			},
-		})
-	end,
+  'nvim-treesitter/nvim-treesitter',
+  lazy = false,
+  build = ":TSUpdate",
+  init = function()
+    local parser_installed = {
+      "python",
+      "matlab",
+      "json",
+      "javascript",
+      "typescript",
+      "yaml",
+      "html",
+      "css",
+      "markdown",
+      "markdown_inline",
+      "bash",
+      "lua",
+      "vim",
+      "dockerfile",
+      "gitignore",
+      "r",
+    }
+    
+    vim.defer_fn(function()
+      require("nvim-treesitter").install(parser_installed)
+    end, 1000)
+    
+    require("nvim-treesitter").update()
+    
+    -- auto-start highlights & indentation
+    vim.api.nvim_create_autocmd("FileType", {
+      desc = "User: enable treesitter highlighting",
+      callback = function(ctx)
+        -- highlights
+        local hasStarted = pcall(vim.treesitter.start)
+        -- indent
+        local noIndent = {}
+        if hasStarted and not vim.list_contains(noIndent, ctx.match) then
+          vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        end
+      end,
+    })
+  end
 }

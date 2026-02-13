@@ -1,39 +1,3 @@
--- return {
--- 	-- "OXY2DEV/markview.nvim",
--- 	-- lazy = false,
--- 	--    priority = 49,
--- 	-- dependencies = {
--- 	-- 	"nvim-treesitter/nvim-treesitter",
--- 	-- 	"nvim-tree/nvim-web-devicons",
--- 	-- },
--- 	-- config = function()
--- 	-- 	require("markview").setup({
--- 	-- 		preview = {
--- 	-- 			icon_provider = "devicons",
--- 	--                filetypes = { "markdown", "Avante", "quarto" },
--- 	-- 		},
--- 	-- 		markdown = {
--- 	-- 			list_items = {
--- 	-- 				marker_minus = {
--- 	-- 					add_padding = false,
--- 	-- 				},
--- 	-- 				marker_plus = {
--- 	-- 					add_padding = false,
--- 	-- 				},
--- 	-- 				marker_star = {
--- 	-- 					add_padding = false,
--- 	-- 				},
--- 	-- 				marker_dot = {
--- 	-- 					add_padding = false,
--- 	-- 				},
--- 	-- 				marker_parenthesis = {
--- 	-- 					add_padding = false,
--- 	-- 				},
--- 	-- 			},
--- 	-- 		},
--- 	-- 	})
--- 	-- end,
--- }
 local colorquote = "fffcfc"
 return {
 	"MeanderingProgrammer/markdown.nvim",
@@ -81,9 +45,9 @@ return {
 					"RenderMarkdownH6",
 				},
 			},
-            code = {
-                disable_background = { 1 },
-            },
+			code = {
+				disable_background = { 1 },
+			},
 		})
 	end,
 }

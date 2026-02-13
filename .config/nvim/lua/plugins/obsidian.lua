@@ -1,9 +1,10 @@
 return {
 	"obsidian-nvim/obsidian.nvim",
+	version = "*",
 	lazy = true,
 	ft = "markdown",
 	dependencies = {
-		"saghen/blink.cmp",
+		"hrsh7th/nvim-cmp",
 		"nvim-telescope/telescope.nvim",
 		"nvim-treesitter/nvim-treesitter",
 	},
@@ -11,7 +12,7 @@ return {
 		{ "<leader>os", ":Obsidian search<cr>", desc = "Obsidian Search" },
 	},
 	opts = {
-        legacy_commands = false,
+		legacy_commands = false,
 		workspaces = {
 			{
 				name = "notes",
@@ -21,8 +22,8 @@ return {
 		open_notes_in = "vsplit",
 		ui = { enable = false },
 		completion = {
-			nvim_cmp = false,
-			blink = true,
+			nvim_cmp = true,
+			blink = false,
 			min_chars = 2,
 		},
 
@@ -37,13 +38,13 @@ return {
 		},
 		notes_subdir = "00 - Inbox", --all new notes go into the inbox
 		attachments = {
-			img_folder = "999-extra/images",
+			folder = "999-extra/images",
 		},
 		new_notes_location = "notes_subdir",
-        preferred_link_style = "markdown",
-        frontmatter = {
-            enabled = false,
-        },
+		preferred_link_style = "markdown",
+		frontmatter = {
+			enabled = false,
+		},
 
 		-- Optional, customize how note IDs are generated given an optional title.
 		---@param title string|?
@@ -63,7 +64,7 @@ return {
 		end,
 		footer = {
 			enabled = true,
-            separator = "",
+			separator = "",
 			format = "{{backlinks}} backlinks",
 		},
 	},
