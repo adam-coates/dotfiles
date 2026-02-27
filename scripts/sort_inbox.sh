@@ -92,7 +92,7 @@ extract_tag() {
 find_folder() {
     local tag="$1"
     # Use find with iname to handle spaces and case insensitivity
-    local folder=$(find "$HOME/notes" -type d -iname "$tag" 2>/dev/null | head -n 1)
+    local folder=$(find "$HOME/notes" -type d -iname "* $tag" 2>/dev/null | head -n 1)
     echo "$folder"
 }
 
