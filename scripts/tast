@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -e
+# Use the working approach from variant 5
+TODO=$(printf "\n" | omarchy-launch-walker --dmenu --width 500 --minheight 1 --maxheight 1 -p "Todo…")
+echo $TODO
+# Trim any potential whitespace that might cause issues
+TODO=$(echo "$TODO" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+# Use length check instead of -n check for more reliability
+if [[ ${#TODO} -gt 0 ]]; then
+    echo "Attempting to add: '$TODO'" >&2
+    if /home/adam/.cargo/bin/tod t q -c "$TODO"; then
+        /usr/bin/notify-send -a Todoist "Saved Todo: $TODO"
+        echo "Success!" >&2
+    else
+        /usr/bin/notify-send -a Todoist -u critical "Failed to save todo: $TODO"
+        echo "Failed!" >&2
+    fi
+else
+    echo "No task entered" >&2
+fi
