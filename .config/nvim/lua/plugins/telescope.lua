@@ -3,8 +3,6 @@ return {
 	version = "*",
 	dependencies = {
 		{ "nvim-telescope/telescope-ui-select.nvim" },
-		"nvim-lua/plenary.nvim",
-		-- optional but recommended
 		{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
 		"nvim-tree/nvim-web-devicons",
 		"nvim-lua/plenary.nvim",
