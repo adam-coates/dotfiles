@@ -1,11 +1,30 @@
 #!/usr/bin/env python3
 
-# add walker --dmenu | /home/adam/test/test-style/stylinator.py | wl-copy -t "image/x-inkscape-svg" as a keybind in hyprland
+# Usage:
+# 1. Show menu: walker --dmenu < <(stylinator.py --menu) | stylinator.py | wl-copy -t "image/x-inkscape-svg"
+# 2. Direct input: walker --dmenu | stylinator.py | wl-copy -t "image/x-inkscape-svg"
 
+import sys
 from typing import Any
 
+STYLE_OPTIONS = """s - Stroke (border)
+a - Arrow end
+x - Arrows both ends
+d - Dashed line
+e - Dotted line
+g - Thick/bold stroke
+h - Very thick stroke
+f - Semi-transparent fill (12%)
+b - Solid black fill
+w - Solid white fill
+---
+sa - Stroke + arrow
+ag - Bold arrow
+fs - Fill + stroke
+sg - Bold stroke
+dg - Bold dashed line"""
 
-# stolen from gilles castel
+
 def gen_style(combination):
     """This creates the style depending on the combination of keys."""
 
@@ -126,4 +145,22 @@ def gen_style(combination):
     return svg
 
 
-print(gen_style(combination=set(input())))
+if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "--menu":
+        # Print menu options
+        print(STYLE_OPTIONS)
+    else:
+        # Process input
+        user_input = input().strip()
+
+        # Extract just the key combination (remove description if present)
+        # e.g., "sa - Stroke + arrow" -> "sa"
+        combination_str = user_input.split()[0] if user_input else ""
+
+        # Skip separator lines
+        if combination_str == "---":
+            sys.exit(0)
+
+        result = gen_style(combination=set(combination_str))
+        if result:
+            print(result)

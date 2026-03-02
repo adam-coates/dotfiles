@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+walker --dmenu < <(stylinator.py --menu) | stylinator.py | wl-copy -t "image/x-inkscape-svg"
