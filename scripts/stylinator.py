@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# add walker --dmenu | /home/adam/test/test-style/stylinator.py | wl-copy -t "image/x-inkscape-svg" as a keybind in hyprland
+
 from typing import Any
 
 
