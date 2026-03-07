@@ -18,7 +18,7 @@ BLACK="#1d2021"
 BG="#282828"
 FG="#d4be98"
 
-RESET="#[fg=${FG},bg=default,nobold,noitalics,nounderscore,nodim]"
+RESET="#[fg=default,bg=default,nobold,noitalics,nounderscore,nodim]"
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 
@@ -47,10 +47,14 @@ fi
 
 # Get diff statistics comparing to HEAD (includes both staged and unstaged)
 if [[ $HAS_CHANGES -eq 1 ]]; then
-    DIFF_COUNTS=($(git diff HEAD --numstat 2>/dev/null | awk '{changed+=1; ins+=($1+0); del+=($2+0)} END {printf("%d %d %d", changed+0, ins+0, del+0)}'))
-    CHANGED_COUNT=$(echo "${DIFF_COUNTS[0]:-0}" | bc)
-    INSERTIONS_COUNT=$(echo "${DIFF_COUNTS[1]:-0}" | bc)
-    DELETIONS_COUNT=$(echo "${DIFF_COUNTS[2]:-0}" | bc)
+    #DIFF_COUNTS=($(git diff HEAD --numstat 2>/dev/null | awk '{changed+=1; ins+=($1+0); del+=($2+0)} END {printf("%d %d %d", changed+0, ins+0, del+0)}'))
+    #CHANGED_COUNT=$(echo "${DIFF_COUNTS[0]:-0}" | bc)
+    #INSERTIONS_COUNT=$(echo "${DIFF_COUNTS[1]:-0}" | bc)
+    #DELETIONS_COUNT=$(echo "${DIFF_COUNTS[2]:-0}" | bc)
+    read CHANGED_COUNT INSERTIONS_COUNT DELETIONS_COUNT <<<"$(
+        git diff HEAD --numstat 2>/dev/null |
+            awk '{changed+=1; ins+=($1+0); del+=($2+0)} END {print changed+0, ins+0, del+0}'
+    )"
 
     SYNC_MODE=1
 fi
