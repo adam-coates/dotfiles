@@ -20,6 +20,8 @@ return {
       "dockerfile",
       "gitignore",
       "r",
+      "typst",
+      "nix",
     }
     
     vim.defer_fn(function()

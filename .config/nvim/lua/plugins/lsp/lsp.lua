@@ -91,8 +91,8 @@ return {
 			map("n", "<leader>cv", "<cmd>vsplit | lua vim.lsp.buf.definition()<cr>", "Definition in Vsplit")
 
 			-- <leader>l = LSP
-			map("n", "<leader>li", "<cmd>LspInfo<cr>", "LSP Info")
-			map("n", "<leader>lr", "<cmd>LspRestart<cr>", "LSP Restart")
+			map("n", "<leader>li", "<cmd>checkhealth vim.lsp<cr>", "LSP Info")
+			map("n", "<leader>lr", "<cmd>lsp restart *<cr>", "LSP Restart")
 			map("n", "<leader>lh", function()
 				vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
 			end, "Toggle Inlay Hints")
@@ -116,7 +116,7 @@ return {
 				-- Inlay hints disabled by default (toggle with <leader>lh)
 
 				-- Document highlight on cursor hold
-				if client.server_capabilities.documentHighlightProvider then
+				if client:supports_method("textDocument/documentHighlight") then
 					local group = vim.api.nvim_create_augroup("LspDocumentHighlight_" .. bufnr, { clear = true })
 					vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
 						buffer = bufnr,

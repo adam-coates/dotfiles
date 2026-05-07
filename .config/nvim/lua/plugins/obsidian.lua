@@ -26,35 +26,26 @@ return {
 			blink = false,
 			min_chars = 2,
 		},
-
 		templates = {
+			enabled = true,
 			folder = "999-extra/Templates",
-			date_format = "%d-%m-%Y",
-			substitutions = {
-				citation_title = function()
-					vim.cmd("FindCitation")
-				end,
-			},
+			date_format = "%Y-%m-%d",
 		},
-		notes_subdir = "00 - Inbox", --all new notes go into the inbox
+		notes_subdir = "00 - Inbox",
 		attachments = {
 			folder = "999-extra/images",
 		},
 		new_notes_location = "notes_subdir",
-		preferred_link_style = "markdown",
-		frontmatter = {
-			enabled = false,
+		link = {
+			style = "markdown",
 		},
-
-		-- Optional, customize how note IDs are generated given an optional title.
-		---@param title string|?
-		---@return string
+		frontmatter = {
+			enabled = true,
+		},
 		note_id_func = function(title)
-			-- Simply return the title exactly as is without any transformations
 			if title then
 				return title
 			else
-				-- If no title, generate a random ID
 				local suffix = ""
 				for _ = 1, 4 do
 					suffix = suffix .. string.char(math.random(65, 90))
@@ -62,10 +53,32 @@ return {
 				return "untitled_" .. suffix
 			end
 		end,
+		note = {
+			template = "note.md",
+			id_func = function(title)
+				if title then
+					return title
+				else
+					local suffix = ""
+					for _ = 1, 4 do
+						suffix = suffix .. string.char(math.random(65, 90))
+					end
+					return "untitled_" .. suffix
+				end
+			end,
+		},
 		footer = {
 			enabled = true,
 			separator = "",
 			format = "{{backlinks}} backlinks",
+		},
+		daily_notes = {
+			enabled = true,
+			folder = "03 - Logs/Daily",
+			date_format = "YYYY-MM-DD",
+			default_tags = { "Daily" },
+			workdays_only = false,
+			template = "999-extra/Templates/daily.md",
 		},
 	},
 }

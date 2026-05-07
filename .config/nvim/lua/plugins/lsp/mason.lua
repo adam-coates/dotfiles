@@ -14,6 +14,7 @@ return {
 				"jsonls",
 				"yamlls",
 				"ltex_plus",
+				"tinymist",
 			},
 		},
 		dependencies = {

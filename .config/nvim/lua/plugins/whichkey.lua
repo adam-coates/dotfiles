@@ -13,7 +13,7 @@ return {
 				{ "<leader>e", group = "File Explorer" },
 				{ "<leader>f", group = "Find Files" },
 				{ "<leader>r", group = "Smart Rename/ RestartLSP" },
-				{ "<leader>t", group = "Tab" },
+				{ "<leader>t", group = "Tab / Typst" },
 				{ "z", group = "Folding" },
 				{ "[", group = "Jump backwards" },
 				{ "]", group = "Jump forwards" },

@@ -190,15 +190,31 @@ return {
 			endfunction
 		]])
 
-			-- Helper function to start REPL in tmux
+			local function get_env(var)
+				local val = vim.fn.getenv(var)
+				if val == vim.v.null then return "" end
+				return val
+			end
+
 			local function start_repl(repl_type, repl_cmd)
-				-- Get panes before split
 				local panes_before = vim.fn.systemlist("tmux list-panes -F '#{pane_id}'")
 
-				-- Split tmux pane to the right and start REPL
-				vim.fn.system(string.format("tmux split-window -h '%s'", repl_cmd))
+				local cmd = { "tmux", "split-window", "-h" }
 
-				-- Get the new pane ID
+				if repl_type == "python" then
+					local ld = get_env("LD_LIBRARY_PATH")
+					local path = get_env("PATH")
+					if ld ~= "" then
+						vim.list_extend(cmd, { "-e", "LD_LIBRARY_PATH=" .. ld })
+					end
+					if path ~= "" then
+						vim.list_extend(cmd, { "-e", "PATH=" .. path })
+					end
+				end
+
+				table.insert(cmd, repl_cmd)
+				vim.fn.system(cmd)
+
 				vim.defer_fn(function()
 					local panes_after = vim.fn.systemlist("tmux list-panes -F '#{pane_id}'")
 

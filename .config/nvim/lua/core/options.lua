@@ -27,9 +27,11 @@ opt.smartcase = true
 -- cursor line
 opt.cursorline = true
 
+-- sign column
+opt.signcolumn = "yes"
+
 -- appearance
 opt.termguicolors = true
---opt.signcolumn = "yes"
 
 -- backspace
 opt.backspace = "indent,eol,start"
@@ -46,13 +48,14 @@ opt.iskeyword:append("-")
 -- leave 8 rows bottom and top while scrolling
 opt.scrolloff = 8
 
-opt.cmdheight = 1
-
 -- undos saved
 opt.swapfile = false
 opt.backup = false
 opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
 opt.undofile = true
+
+vim.cmd("packadd nvim.undotree")
+vim.keymap.set("n", "<leader>u", require("undotree").open, { desc = "Open undotree" })
 
 opt.foldenable = true
 opt.foldlevel = 99
