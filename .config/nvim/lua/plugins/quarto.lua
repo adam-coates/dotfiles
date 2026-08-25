@@ -102,6 +102,15 @@ return {
 					endif
 				endif
 			endfunction
+
+			" Handle multi-line Python sent to IPython via %cpaste
+			function SlimeOverride_EscapeText_python(text)
+				if exists('g:slime_python_ipython') && len(split(a:text,"\n")) > 1
+					return ["%cpaste -q\n", g:slime_dispatch_ipython_pause, a:text, "--", "\n"]
+				else
+					return [a:text]
+				endif
+			endfunction
 		]])
 
 			vim.g.slime_target = "tmux"
@@ -175,6 +184,11 @@ return {
 						socket_name = "default",
 						target_pane = "{right-of}",
 					}
+
+					-- Use # %% as cell delimiter for Python files
+					if vim.bo.filetype == "python" then
+						vim.b.slime_cell_delimiter = "# %%"
+					end
 				end,
 			})
 
@@ -278,7 +292,7 @@ return {
 			-- Slime send keymaps with forced config update
 			vim.keymap.set("n", "<c-c><c-c>", function()
 				_G.update_slime_config()
-				vim.cmd("SlimeSendCell")
+				vim.fn["slime#send_cell"]()
 			end, { desc = "Send cell to REPL" })
 
 			vim.keymap.set("x", "<c-c><c-c>", function()

@@ -1,0 +1,89 @@
+#!/usr/bin/python3
+"""Launch openconnect-sso with three fixes for this machine / this VPN endpoint.
+
+1. Python 3.12+ event loop.
+   openconnect-sso 0.8.1 calls asyncio.get_event_loop() outside a running loop
+   (app.py:35, app.py:174, browser/browser.py:19). Until 3.12 that implicitly
+   created a loop; 3.14 raises RuntimeError. Creating one here, in the main
+   thread before main() runs, makes all three call sites find it.
+
+2. <client-cert-request/> handshake.
+   univpn.uni-graz.at answers the auth-init POST with <client-cert-request/>,
+   asking for an SSL client certificate. The certificate is optional, but the
+   ASA will not move on until the client explicitly says it has none: openconnect
+   re-POSTs the same init request with a <client-cert-fail/> element appended,
+   and only then does the ASA return <auth id="main"> with the SAML SSO URLs.
+   openconnect-sso 0.8.1 POSTs once and tries to parse the certificate request
+   as an auth form, dying with "no such child: auth". Merely re-POSTing is not
+   enough -- the <client-cert-fail/> marker is what unblocks it.
+
+3. Multiprocessing start method for the Qt browser child.
+   openconnect_sso.browser.webengine_process.Process subclasses
+   multiprocessing.Process to run the Qt browser. Neither Linux default works
+   here:
+     - "forkserver" (the 3.14 default) re-imports this file as __mp_main__,
+       which without the __main__ guard below ran the whole authentication a
+       second time before dying.
+     - "fork" (the pre-3.14 default) deadlocks. Reading the password from the
+       keyring opens a D-Bus/SecretService connection in the *parent*; the
+       forked child inherits that threaded state and hangs forever in
+       QApplication() at webengine_process.py:124. This only shows up once
+       [credentials] is set in config.toml -- with no credentials the parent
+       never touches the keyring, forks cleanly, and the browser starts.
+   "spawn" gives the child a fresh interpreter with no inherited locks. It
+   re-imports this file, which the __main__ guard makes harmless, and re-applies
+   the patch above in the child as a side effect.
+
+Fixes live here rather than in /usr/lib/python3.14/site-packages, so a
+pacman/AUR upgrade of openconnect-sso cannot silently undo them.
+"""
+import asyncio
+import multiprocessing
+import sys
+
+import structlog
+from lxml import etree
+from openconnect_sso import authenticator as _authenticator
+
+logger = structlog.get_logger(__name__)
+
+
+def _with_client_cert_fail(request):
+    """Append <client-cert-fail/> to a serialised config-auth request."""
+    root = etree.fromstring(request)
+    if root.find("client-cert-fail") is None:
+        etree.SubElement(root, "client-cert-fail")
+    return etree.tostring(
+        root, pretty_print=True, xml_declaration=True, encoding="UTF-8"
+    )
+
+
+def _start_authentication(self):
+    request = _authenticator._create_auth_init_request(
+        self.host, self.host.vpn_url, self.version
+    )
+    logger.debug("Sending auth init request", content=request)
+    response = self.session.post(self.host.vpn_url, request)
+    logger.debug("Auth init response received", content=response.content)
+
+    if b"client-cert-request" in response.content:
+        logger.info("Server asked for a client certificate; declaring we have none")
+        request = _with_client_cert_fail(request)
+        logger.debug("Re-sending auth init request", content=request)
+        response = self.session.post(self.host.vpn_url, request)
+        logger.debug("Auth init retry response received", content=response.content)
+
+    return _authenticator.parse_response(response)
+
+
+# Applied at import so a forked/spawned child inherits it too.
+_authenticator.Authenticator._start_authentication = _start_authentication
+
+
+if __name__ == "__main__":
+    multiprocessing.set_start_method("spawn")
+    asyncio.set_event_loop(asyncio.new_event_loop())
+
+    from openconnect_sso.cli import main
+
+    sys.exit(main())
