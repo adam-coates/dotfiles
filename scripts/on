@@ -1,14 +1,153 @@
 #!/usr/bin/env bash
 
+# Quick note → Joplin from the terminal.
+# Usage: on "my note title" [-t tag1,tag2] [-l location]
 
-# Check if a file name is provided
-if [ -z "$1" ]; then
-  echo "Error: A file name must be set, e.g. \"the wonderful thing about tiggers\"."
+set -euo pipefail
+
+JOPLIN_API="http://localhost:41184"
+JOPLIN_SETTINGS="$HOME/.config/joplin-desktop/settings.json"
+INBOX_ID="e29d0819f7d14dbd8fa34fbe22525bc8" # 00 - Inbox
+
+# --- parse args -----------------------------------------------------------
+
+title=""
+tags=""
+location=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -t|--tags)     tags="$2"; shift 2 ;;
+    -l|--location) location="$2"; shift 2 ;;
+    -h|--help)
+      echo "Usage: on <title> [-t tag1,tag2] [-l location]"
+      exit 0
+      ;;
+    -*)
+      echo "Unknown flag: $1" >&2; exit 1 ;;
+    *)
+      if [[ -z "$title" ]]; then
+        title="$1"; shift
+      else
+        echo "Error: unexpected argument '$1'" >&2; exit 1
+      fi
+      ;;
+  esac
+done
+
+if [[ -z "$title" ]]; then
+  echo "Error: a title is required, e.g.  on \"the wonderful thing about tiggers\""
   exit 1
 fi
 
-formatted_file_name="${1}.md"
-cd "/home/adam/notes" || exit
-touch "00 - Inbox/${formatted_file_name}"
-nvim "00 - Inbox/${formatted_file_name}"
+# --- ensure Joplin API is reachable ---------------------------------------
 
+if ! curl -sf "$JOPLIN_API/ping" >/dev/null 2>&1; then
+  echo "Joplin API not reachable — starting Joplin..."
+  nohup /opt/Joplin/joplin >/dev/null 2>&1 &
+  disown
+
+  # wait up to 15 s for the API
+  for i in $(seq 1 30); do
+    sleep 0.5
+    if curl -sf "$JOPLIN_API/ping" >/dev/null 2>&1; then
+      break
+    fi
+    if [[ $i -eq 30 ]]; then
+      echo "Error: Joplin API did not become available." >&2
+      exit 1
+    fi
+  done
+fi
+
+# --- read API token -------------------------------------------------------
+
+token=$(jq -r '.["api.token"]' "$JOPLIN_SETTINGS")
+if [[ -z "$token" || "$token" == "null" ]]; then
+  echo "Error: could not read api.token from $JOPLIN_SETTINGS" >&2
+  exit 1
+fi
+
+# --- build template & edit in nvim ----------------------------------------
+
+date=$(date +%Y-%m-%d)
+tmpfile=$(mktemp /tmp/joplin-note-XXXXXX.md)
+trap 'rm -f "$tmpfile"' EXIT
+
+cat > "$tmpfile" <<EOF
+---
+title: $title
+tags: [$tags]
+location: $location
+date: $date
+---
+
+# $title
+
+EOF
+
+# record size before editing so we can detect an empty body
+before=$(wc -c < "$tmpfile")
+
+nvim "+normal Go" "+startinsert" "$tmpfile"
+
+# --- post to Joplin -------------------------------------------------------
+
+# bail if the user quit without writing anything new
+if [[ ! -s "$tmpfile" ]] || [[ $(wc -c < "$tmpfile") -le "$before" ]]; then
+  echo "No changes — note not sent."
+  exit 0
+fi
+
+body=$(<"$tmpfile")
+
+payload=$(jq -n \
+  --arg title "$title" \
+  --arg body  "$body" \
+  --arg pid   "$INBOX_ID" \
+  '{title: $title, body: $body, parent_id: $pid}')
+
+result=$(curl -s -X POST \
+  "$JOPLIN_API/notes?token=$token" \
+  -H "Content-Type: application/json" \
+  -d "$payload")
+
+note_id=$(echo "$result" | jq -r '.id // empty')
+
+if [[ -z "$note_id" ]]; then
+  echo "Error: Joplin save failed:" >&2
+  echo "$result" >&2
+  exit 1
+fi
+
+# --- apply tags ------------------------------------------------------------
+
+if [[ -n "$tags" ]]; then
+  IFS=',' read -ra tag_arr <<< "$tags"
+  for tag_name in "${tag_arr[@]}"; do
+    tag_name=$(echo "$tag_name" | xargs) # trim whitespace
+    [[ -z "$tag_name" ]] && continue
+
+    # find existing tag
+    encoded=$(python3 -c "import urllib.parse; print(urllib.parse.quote('''$tag_name'''))" 2>/dev/null || echo "$tag_name")
+    search=$(curl -s "$JOPLIN_API/search?query=$encoded&type=tag&token=$token")
+    tag_id=$(echo "$search" | jq -r '.items[0].id // empty')
+
+    # or create it
+    if [[ -z "$tag_id" ]]; then
+      create=$(curl -s -X POST "$JOPLIN_API/tags?token=$token" \
+        -H "Content-Type: application/json" \
+        -d "$(jq -n --arg t "$tag_name" '{title: $t}')")
+      tag_id=$(echo "$create" | jq -r '.id // empty')
+    fi
+
+    # assign tag to note
+    if [[ -n "$tag_id" ]]; then
+      curl -s -X POST "$JOPLIN_API/tags/$tag_id/notes?token=$token" \
+        -H "Content-Type: application/json" \
+        -d "$(jq -n --arg id "$note_id" '{id: $id}')" >/dev/null
+    fi
+  done
+fi
+
+echo "✓ Saved to Joplin: $title"
