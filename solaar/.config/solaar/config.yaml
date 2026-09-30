@@ -10,7 +10,7 @@
     headset_per_zone_lighting, headset-signature-startup, headset-signature-shutdown, headset-signature-passive, logivoice-nr-state, logivoice-ng-state,
     logivoice-comp-state, logivoice-deesser-state, logivoice-depopper-state, logivoice-limiter-state, logivoice-hpf-state]
   _battery: 4100
-  _config_cookie: [212, 191]
+  _config_cookie: [212, 192]
   _modelId: B03400000000
   _sensitive: {change-host: true, divert-keys: false, hires-scroll-mode: true, hires-smooth-invert: ignore, hires-smooth-resolution: ignore, reprogrammable-keys: false,
     scroll-ratchet: false, thumb-scroll-mode: true}
