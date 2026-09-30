@@ -12,7 +12,6 @@ source "$OMARCHY_PATH/default/bash/rc"
 #
 # Make an alias for invoking commands you use constantly
 # alias p='python'
-eval "$(direnv hook bash)"
+command -v direnv &>/dev/null && eval "$(direnv hook bash)"
 
-
-. "$HOME/.local/share/../bin/env"
+[[ -r "$HOME/.local/share/../bin/env" ]] && . "$HOME/.local/share/../bin/env"
