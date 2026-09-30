@@ -1,26 +1,51 @@
+# Dotfiles
 
-Arch related dotfiles adapted from: https://github.com/mylinuxforwork/dotfiles see branch `old_macOS_mylinuxforwork`
+Managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
-- Most recent arch dotfiles are now in their own repo [archdotfiles](https://github.com/adam-coates/archdotfiles)
+## Usage
 
-- Repo here is specifically for use for either macOS and using neovim on windows 
+From `~/dotfiles`:
 
+```bash
+# Stow a package (creates symlinks in ~)
+stow <package>
 
-- Current setup works on macOS so need to check paths on windows!! 
-    e.g. `/Users/adam/` (macOS) = `C:/Users/*name*` (windows)
-    e.g. `~/.config` (macOS) = `C:/Users/*name*/AppData/local` (windows)
+# Stow all packages
+stow */
 
+# Remove a package's symlinks
+stow -D <package>
+```
 
-- For windows the installation will involve extra tinkering and likely the removal of some plugins (e.g. image.lua)
+## Packages
 
+| Package | Target |
+|---------|--------|
+| bash | `~/.bashrc` |
+| ghostty | `~/.config/ghostty` |
+| hypr | `~/.config/hypr` |
+| kitty | `~/.config/kitty` |
+| lazygit | `~/.config/lazygit` |
+| nvim | `~/.config/nvim` |
+| omarchy | `~/.config/omarchy` |
+| solaar | `~/.config/solaar` |
+| starship | `~/.config/starship.toml` |
+| tmux | `~/.config/tmux` |
+| vale | `~/.config/vale` |
+| yazi | `~/.config/yazi` |
+| zathura | `~/.config/zathura` |
+| zsh | `~/.zshrc` |
+| scripts | `~/scripts` |
 
+## Adding a new package
 
-- Ngram database downloaded from here: 
-    [Ngram database](https://languagetool.org/download/ngram-data/)
+```bash
+mkdir -p <name>/.config/<name>
+# copy/move config files into it
+stow <name>
+```
 
-- Current set-up for writing notes uses a mixture of the following: 
-    - Native nvim spell checking
-    - Vale - for grammar checking 
-    - ~~Harper - for grammar checking~~ (removed harper as its bloat. May switch back to since ltex-ls uses quite some resources)
-    - Ltexls - for grammar checking (and some spelling) 
+## Notes
 
+- Scripts live in `~/scripts` (managed via stow, not under `.config`)
+- Nvim writing setup uses native spell checking, Vale, and Ltex-ls for grammar
