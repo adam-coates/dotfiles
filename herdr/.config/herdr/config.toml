@@ -122,8 +122,5 @@ timeout_seconds = 2
 type = "zoom"
 
 [[ui.tab_bar_right]]
-type = "hostname"
-
-[[ui.tab_bar_right]]
 type = "datetime"
 format = "%H:%M"
