@@ -1,4 +1,8 @@
 #!/bin/sh
+
+# Clear stale GUM_* env vars so the current theme's colors take effect
+unset $(env | sed -n 's/^\(GUM_[^=]*\)=.*/\1/p')
+
 SCRIPT="$HOME/.config/herdr/scripts/pomodoro.sh"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/pomodoro"
 STATE_FILE="$STATE_DIR/state"
