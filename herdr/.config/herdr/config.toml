@@ -78,7 +78,7 @@ width = "40%"
 height = "50%"
 
 [ui]
-accent = "cyan"
+accent = "blue"
 
 # tmux drew single-line dividers between adjacent panes and no outer frame
 pane_gaps = false
