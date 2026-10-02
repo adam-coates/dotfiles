@@ -113,11 +113,20 @@ return {
 			endfunction
 		]])
 
-			vim.g.slime_target = "tmux"
+			-- Auto-detect multiplexer
+			local in_herdr = vim.fn.getenv("HERDR_ENV") == "1"
+
+			if in_herdr then
+				vim.g.slime_target = "herdr"
+				vim.g.slime_default_config = { pane_id = "" }
+			else
+				vim.g.slime_target = "tmux"
+				vim.g.slime_default_config = { socket_name = "default", target_pane = "{right-of}" }
+			end
+
 			vim.g.slime_no_mappings = true
 			vim.g.slime_python_ipython = 1
 			vim.g.slime_dont_ask_default = 1
-			vim.g.slime_default_config = { socket_name = "default", target_pane = "{right-of}" }
 		end,
 		config = function()
 			vim.g.slime_input_pid = false
@@ -151,26 +160,27 @@ return {
 				return "bash"
 			end
 
+			local in_herdr = vim.fn.getenv("HERDR_ENV") == "1"
+
 			-- Function to update slime config based on current language
 			_G.update_slime_config = function()
 				local lang = _G.get_current_language()
 				local pane = _G.repl_panes[lang]
 
-				if pane then
-					vim.b.slime_config = {
-						socket_name = "default",
-						target_pane = pane,
-					}
-					-- Also set in vimscript
-					vim.cmd(
-						string.format([[let b:slime_config = {"socket_name": "default", "target_pane": "%s"}]], pane)
-					)
+				if in_herdr then
+					local pane_id = pane or ""
+					vim.b.slime_config = { pane_id = pane_id }
+					vim.cmd(string.format([[let b:slime_config = {"pane_id": "%s"}]], pane_id))
 				else
-					vim.b.slime_config = {
-						socket_name = "default",
-						target_pane = "{right-of}",
-					}
-					vim.cmd([[let b:slime_config = {"socket_name": "default", "target_pane": "{right-of}"}]])
+					if pane then
+						vim.b.slime_config = { socket_name = "default", target_pane = pane }
+						vim.cmd(string.format(
+							[[let b:slime_config = {"socket_name": "default", "target_pane": "%s"}]], pane
+						))
+					else
+						vim.b.slime_config = { socket_name = "default", target_pane = "{right-of}" }
+						vim.cmd([[let b:slime_config = {"socket_name": "default", "target_pane": "{right-of}"}]])
+					end
 				end
 			end
 
@@ -178,14 +188,14 @@ return {
 			vim.api.nvim_create_autocmd("FileType", {
 				pattern = { "quarto", "markdown", "python", "r" },
 				callback = function()
-					-- Initialize with default config
-					vim.cmd([[let b:slime_config = {"socket_name": "default", "target_pane": "{right-of}"}]])
-					vim.b.slime_config = {
-						socket_name = "default",
-						target_pane = "{right-of}",
-					}
+					if in_herdr then
+						vim.b.slime_config = { pane_id = "" }
+						vim.cmd([[let b:slime_config = {"pane_id": ""}]])
+					else
+						vim.b.slime_config = { socket_name = "default", target_pane = "{right-of}" }
+						vim.cmd([[let b:slime_config = {"socket_name": "default", "target_pane": "{right-of}"}]])
+					end
 
-					-- Use # %% as cell delimiter for Python files
 					if vim.bo.filetype == "python" then
 						vim.b.slime_cell_delimiter = "# %%"
 					end
@@ -195,10 +205,6 @@ return {
 			-- Override slime's config function
 			vim.cmd([[
 			function! SlimeOverride_ConfigureTarget()
-				" Ensure config exists
-				if !exists('b:slime_config')
-					let b:slime_config = {"socket_name": "default", "target_pane": "{right-of}"}
-				endif
 				call luaeval('_G.update_slime_config()')
 				return b:slime_config
 			endfunction
@@ -211,52 +217,97 @@ return {
 			end
 
 			local function start_repl(repl_type, repl_cmd)
-				local panes_before = vim.fn.systemlist("tmux list-panes -F '#{pane_id}'")
-
-				local cmd = { "tmux", "split-window", "-h" }
-
-				if repl_type == "python" then
-					local ld = get_env("LD_LIBRARY_PATH")
-					local path = get_env("PATH")
-					if ld ~= "" then
-						vim.list_extend(cmd, { "-e", "LD_LIBRARY_PATH=" .. ld })
+				if in_herdr then
+					-- Get panes before split
+					local before_json = vim.fn.system("herdr pane list")
+					local before = vim.fn.json_decode(before_json)
+					local before_ids = {}
+					for _, p in ipairs(before.result.panes) do
+						before_ids[p.pane_id] = true
 					end
-					if path ~= "" then
-						vim.list_extend(cmd, { "-e", "PATH=" .. path })
+
+					-- Split and run the REPL
+					local split_cmd = { "herdr", "pane", "split", "--direction", "right" }
+					if repl_type == "python" then
+						local ld = get_env("LD_LIBRARY_PATH")
+						local path = get_env("PATH")
+						if ld ~= "" then
+							vim.list_extend(split_cmd, { "--env", "LD_LIBRARY_PATH=" .. ld })
+						end
+						if path ~= "" then
+							vim.list_extend(split_cmd, { "--env", "PATH=" .. path })
+						end
 					end
-				end
+					vim.fn.system(split_cmd)
 
-				table.insert(cmd, repl_cmd)
-				vim.fn.system(cmd)
-
-				vim.defer_fn(function()
-					local panes_after = vim.fn.systemlist("tmux list-panes -F '#{pane_id}'")
-
-					-- Find the new pane
-					local new_pane = nil
-					for _, pane in ipairs(panes_after) do
-						local found = false
-						for _, old_pane in ipairs(panes_before) do
-							if pane == old_pane then
-								found = true
+					vim.defer_fn(function()
+						local after_json = vim.fn.system("herdr pane list")
+						local after = vim.fn.json_decode(after_json)
+						local new_pane = nil
+						for _, p in ipairs(after.result.panes) do
+							if not before_ids[p.pane_id] then
+								new_pane = p.pane_id
 								break
 							end
 						end
-						if not found then
-							new_pane = pane
-							break
+
+						if new_pane then
+							-- Run the REPL command in the new pane
+							vim.fn.system({ "herdr", "pane", "run", new_pane, repl_cmd })
+							_G.repl_panes[repl_type] = new_pane
+							print(string.format("%s REPL started in pane %s", repl_type, new_pane))
+							_G.update_slime_config()
+						else
+							print(string.format("Warning: Could not detect new pane for %s", repl_type))
+						end
+					end, 300)
+				else
+					-- tmux path
+					local panes_before = vim.fn.systemlist("tmux list-panes -F '#{pane_id}'")
+
+					local cmd = { "tmux", "split-window", "-h" }
+
+					if repl_type == "python" then
+						local ld = get_env("LD_LIBRARY_PATH")
+						local path = get_env("PATH")
+						if ld ~= "" then
+							vim.list_extend(cmd, { "-e", "LD_LIBRARY_PATH=" .. ld })
+						end
+						if path ~= "" then
+							vim.list_extend(cmd, { "-e", "PATH=" .. path })
 						end
 					end
 
-					if new_pane then
-						_G.repl_panes[repl_type] = new_pane
-						print(string.format("%s REPL started in pane %s", repl_type, new_pane))
-						-- Update config immediately after starting REPL
-						_G.update_slime_config()
-					else
-						print(string.format("Warning: Could not detect new pane for %s", repl_type))
-					end
-				end, 300)
+					table.insert(cmd, repl_cmd)
+					vim.fn.system(cmd)
+
+					vim.defer_fn(function()
+						local panes_after = vim.fn.systemlist("tmux list-panes -F '#{pane_id}'")
+
+						local new_pane = nil
+						for _, pane in ipairs(panes_after) do
+							local found = false
+							for _, old_pane in ipairs(panes_before) do
+								if pane == old_pane then
+									found = true
+									break
+								end
+							end
+							if not found then
+								new_pane = pane
+								break
+							end
+						end
+
+						if new_pane then
+							_G.repl_panes[repl_type] = new_pane
+							print(string.format("%s REPL started in pane %s", repl_type, new_pane))
+							_G.update_slime_config()
+						else
+							print(string.format("Warning: Could not detect new pane for %s", repl_type))
+						end
+					end, 300)
+				end
 			end
 
 			-- Keymaps to start REPLs
