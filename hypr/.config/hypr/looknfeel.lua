@@ -48,3 +48,6 @@
 --     column_width = 0.97,
 --   },
 -- })
+
+-- Make all windows fully opaque (overrides Omarchy's default-opacity rule).
+o.window(".*", { opacity = "1 override 1 override" })
