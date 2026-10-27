@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Update the storytold *craft AppImages in ~/Applications from their GitHub releases.
+# appimagelauncherd watches ~/Applications, so it integrates the new file and drops the old menu entry.
+set -euo pipefail
+
+APPDIR="$HOME/Applications"
+OWNER="storytold"
+ARCH="linux-x86_64"
+
+shopt -s nullglob
+for old in "$APPDIR"/*craft-*-"$ARCH"*.AppImage; do
+    base=$(basename "$old")
+    app=${base%%-*}                                  # deckcraft
+    current=$(sed -E "s/^$app-([0-9.]+)-.*/\1/" <<<"$base")
+
+    json=$(curl -fsSL "https://api.github.com/repos/$OWNER/$app/releases/latest")
+    latest=$(grep -m1 '"tag_name"' <<<"$json" | sed -E 's/.*"v?([^"]+)".*/\1/')
+
+    if [[ "$(printf '%s\n%s\n' "$current" "$latest" | sort -V | tail -1)" == "$current" ]]; then
+        echo "$app: up to date ($current)"
+        continue
+    fi
+
+    echo "$app: $current -> $latest"
+    file="$app-$latest-$ARCH.AppImage"
+    url="https://github.com/$OWNER/$app/releases/download/v$latest"
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+
+    curl -fL --progress-bar -o "$tmp/$file" "$url/$file"
+    curl -fsSL -o "$tmp/SHA256SUMS.txt" "$url/SHA256SUMS.txt"
+    (cd "$tmp" && grep " $file\$" SHA256SUMS.txt | sha256sum -c --quiet -)
+
+    chmod +x "$tmp/$file"
+    mv "$tmp/$file" "$APPDIR/$file"
+    rm -f "$old"
+    rm -rf "$tmp"
+    trap - EXIT
+    echo "$app: installed $latest"
+done
