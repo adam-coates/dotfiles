@@ -81,7 +81,7 @@ return {
 	},
 	{
 		"jpalardy/vim-slime",
-		ft = { "quarto", "markdown", "python", "r" },
+		ft = { "quarto", "markdown", "python", "r", "sh", "bash", "zsh" },
 		init = function()
 			vim.b["quarto_is_python_chunk"] = false
 			Quarto_is_in_python_chunk = function()
@@ -162,10 +162,62 @@ return {
 
 			local in_herdr = vim.fn.getenv("HERDR_ENV") == "1"
 
+			-- Find a REPL pane left open from a previous nvim session (same herdr tab)
+			-- Panes started by start_repl are labelled "nvim-repl:<lang>". Python and R panes
+			-- opened some other way are matched by their foreground process instead (bash
+			-- can't be, since any idle shell pane would match).
+			local repl_process_names = { python = "ipython", r = "R" }
+
+			local function herdr_json(cmd)
+				local ok, decoded = pcall(vim.fn.json_decode, vim.fn.system(cmd))
+				if ok and type(decoded) == "table" then
+					return decoded.result
+				end
+				return nil
+			end
+
+			local function find_existing_repl(lang)
+				if not in_herdr then
+					return nil
+				end
+				local current = herdr_json("herdr pane current")
+				local list = herdr_json("herdr pane list")
+				if not (current and list) then
+					return nil
+				end
+				local tab_id = current.pane.tab_id
+				local candidates = {}
+				for _, p in ipairs(list.panes) do
+					if p.tab_id == tab_id and p.pane_id ~= current.pane.pane_id then
+						if p.label == "nvim-repl:" .. lang then
+							return p.pane_id
+						end
+						table.insert(candidates, p.pane_id)
+					end
+				end
+				local proc_name = repl_process_names[lang]
+				if not proc_name then
+					return nil
+				end
+				for _, pane_id in ipairs(candidates) do
+					local info = herdr_json({ "herdr", "pane", "process-info", "--pane", pane_id })
+					for _, proc in ipairs(info and info.process_info.foreground_processes or {}) do
+						if proc.name == proc_name then
+							return pane_id
+						end
+					end
+				end
+				return nil
+			end
+
 			-- Function to update slime config based on current language
 			_G.update_slime_config = function()
 				local lang = _G.get_current_language()
 				local pane = _G.repl_panes[lang]
+				if not pane then
+					pane = find_existing_repl(lang)
+					_G.repl_panes[lang] = pane
+				end
 
 				if in_herdr then
 					local pane_id = pane or ""
@@ -186,7 +238,7 @@ return {
 
 			-- Initialize slime config for all relevant buffers
 			vim.api.nvim_create_autocmd("FileType", {
-				pattern = { "quarto", "markdown", "python", "r" },
+				pattern = { "quarto", "markdown", "python", "r", "sh", "bash", "zsh" },
 				callback = function()
 					if in_herdr then
 						vim.b.slime_config = { pane_id = "" }
@@ -196,7 +248,7 @@ return {
 						vim.cmd([[let b:slime_config = {"socket_name": "default", "target_pane": "{right-of}"}]])
 					end
 
-					if vim.bo.filetype == "python" then
+					if vim.tbl_contains({ "python", "sh", "bash", "zsh" }, vim.bo.filetype) then
 						vim.b.slime_cell_delimiter = "# %%"
 					end
 				end,
@@ -254,6 +306,7 @@ return {
 						if new_pane then
 							-- Run the REPL command in the new pane
 							vim.fn.system({ "herdr", "pane", "run", new_pane, repl_cmd })
+							vim.fn.system({ "herdr", "pane", "rename", new_pane, "nvim-repl:" .. repl_type })
 							_G.repl_panes[repl_type] = new_pane
 							print(string.format("%s REPL started in pane %s", repl_type, new_pane))
 							_G.update_slime_config()
