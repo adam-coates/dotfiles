@@ -1,0 +1,10 @@
+NORDIC
+g-factor map
+PCA
+SVD
+Casorati matrix
+patch size
+voxels
+timepoints
+claustrum
+spatial : temporal

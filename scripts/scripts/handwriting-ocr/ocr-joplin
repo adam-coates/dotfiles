@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# One-stop handwriting OCR for Joplin.
+#
+# Tag a Joplin note "ocr" (on any device) with photos of handwritten pages attached,
+# then run this. It:
+#   1. installs anything missing (python, curl, ImageMagick + HEIC support, Ollama, the model)
+#   2. opens Joplin desktop if it isn't running and gives it time to sync
+#   3. starts Ollama for the run and stops it again afterwards
+#   4. transcribes every note tagged "ocr" and retags it "ocr-done"
+#
+# Usage: ocr-joplin [--dry-run]     (--dry-run prints the result without changing notes)
+set -euo pipefail
+
+DIR="$(dirname "$(readlink -f "$0")")"
+export OCR_MODEL="qwen2.5vl:7b"
+OLLAMA_URL="http://127.0.0.1:11434"
+JOPLIN_URL="http://127.0.0.1:41184"
+JOPLIN_SYNC_WAIT=30  # seconds to let a freshly opened Joplin sync before looking for notes
+
+say()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
+die()  { printf '\033[1;31m==>\033[0m %s\n' "$*" >&2; exit 1; }
+
+# --- 1. dependencies --------------------------------------------------------
+
+# Pick the Ollama build that matches the graphics card
+ollama_package() {
+  if lspci 2>/dev/null | grep -qiE '(vga|3d).*nvidia'; then echo ollama-cuda
+  elif lspci 2>/dev/null | grep -qiE '(vga|3d|display).*(amd|ati)'; then echo ollama-vulkan
+  else echo ollama  # CPU only: works, but slowly
+  fi
+}
+
+install_packages() {
+  local missing=()
+  for pkg in "$@"; do pacman -Q "$pkg" &>/dev/null || missing+=("$pkg"); done
+  [[ ${#missing[@]} -eq 0 ]] && return
+  say "Installing: ${missing[*]} (needs your password)"
+  sudo pacman -S --needed --noconfirm "${missing[@]}"
+}
+
+check_dependencies() {
+  if command -v pacman &>/dev/null; then
+    install_packages python curl pciutils imagemagick libheif "$(ollama_package)"
+  else
+    for cmd in python3 curl magick ollama; do
+      command -v "$cmd" &>/dev/null || die "$cmd is missing; install it with your package manager and rerun"
+    done
+  fi
+  magick -list format 2>/dev/null | grep -q '^ *HEIC' \
+    || die "ImageMagick can't read HEIC photos; install libheif and rerun"
+}
+
+# --- 2. Joplin --------------------------------------------------------------
+
+joplin_up() { curl -sf "$JOPLIN_URL/ping" &>/dev/null; }
+
+ensure_joplin() {
+  joplin_up && return
+  command -v joplin &>/dev/null || die "Joplin desktop isn't installed"
+  if ! pgrep -x joplin &>/dev/null; then
+    say "Opening Joplin and giving it ${JOPLIN_SYNC_WAIT}s to sync"
+    setsid joplin &>/dev/null &
+  fi
+  for _ in $(seq 60); do joplin_up && break; sleep 1; done
+  joplin_up || die "Joplin is open but its API isn't answering. Turn on Tools → Options → Web Clipper → Enable Web Clipper Service, then rerun"
+  sleep "$JOPLIN_SYNC_WAIT"
+}
+
+# --- 3. Ollama + model ------------------------------------------------------
+
+ollama_up() { curl -sf "$OLLAMA_URL/api/version" &>/dev/null; }
+
+ensure_ollama() {
+  if ! ollama_up; then
+    say "Starting Ollama"
+    OLLAMA_VULKAN=1 ollama serve &>/dev/null &
+    trap "kill $! 2>/dev/null" EXIT  # stop it again when we're done
+    for _ in $(seq 60); do ollama_up && break; sleep 0.5; done
+    ollama_up || die "Ollama didn't start; run 'ollama serve' to see why"
+  fi
+  if ! ollama list | grep -q "^$OCR_MODEL "; then
+    say "Downloading the $OCR_MODEL model (about 6 GB, one-off)"
+    ollama pull "$OCR_MODEL"
+  fi
+}
+
+# --- 4. run -----------------------------------------------------------------
+
+check_dependencies
+ensure_joplin
+ensure_ollama
+python3 -I "$DIR/ocr_to_joplin.py" "$@"

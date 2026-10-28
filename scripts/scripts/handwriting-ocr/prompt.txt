@@ -1,0 +1,14 @@
+Transcribe the handwritten notes in this photo into Markdown.
+
+Rules:
+- Transcribe exactly what is written, word for word. Do not summarise, correct, translate or add anything.
+- Keep the structure: bullet points as "- ", numbered lists as "1. ", headings as "## ".
+- Ignore text from neighbouring pages that is cut off at the edges of the photo.
+- For a drawn flowchart or diagram made of boxes, circles and arrows, reproduce it as a Mermaid flowchart in a ```mermaid code block (flowchart LR or TD to match the drawing), using the exact text written in each box and on each arrow. Example:
+```mermaid
+flowchart LR
+    A[Start] --> B[Finish]
+```
+- For any other drawing or sketch, write one line in square brackets describing it, e.g. [Sketch: brain with arrow pointing to the claustrum].
+- If a word is illegible, write your best guess followed by (?).
+- Output only the Markdown, nothing else.
