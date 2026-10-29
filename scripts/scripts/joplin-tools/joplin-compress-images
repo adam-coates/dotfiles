@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+"""Shrink large image attachments in Joplin, in place.
+
+Each image over MIN_SIZE is resized to at most MAX_DIM px and re-encoded (JPEG for photos,
+optimised PNG for screenshots and anything transparent). The smaller file replaces the
+attachment under the same id, so links in notes keep working and the change syncs to
+other devices. Originals are kept in BACKUPS. Images in notes still tagged "ocr" are
+skipped so the OCR script gets the full-resolution photo.
+
+Needs Joplin desktop running (Web Clipper service on) and ImageMagick (libheif for HEIC).
+Usage: joplin-compress-images [--dry-run]     (--dry-run only reports what it would save)
+"""
+import json
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+import uuid
+from pathlib import Path
+
+JOPLIN = "http://127.0.0.1:41184"
+JOPLIN_SETTINGS = Path.home() / ".config/joplin-desktop/settings.json"
+JOPLIN_RESOURCES = Path.home() / ".config/joplin-desktop/resources"
+DATA = Path.home() / ".local/share/joplin-compress-images"
+BACKUPS = DATA / "backups"
+CHECKED = DATA / "checked.json"  # resource id -> blob_updated_time, so unchanged images aren't redone
+OCR_TAG = "ocr"
+COMPRESSIBLE = {"image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"}
+MIN_SIZE = 300_000    # bytes; smaller images are left alone
+MAX_DIM = 2000        # px on the long side
+JPEG_QUALITY = 85
+MIN_SAVING = 0.25     # only replace an image if this fraction of its size is saved
+
+
+def log(msg: str) -> None:
+    print(f"{time.strftime('%H:%M:%S')} {msg}", flush=True)
+
+
+def mb(n: int) -> str:
+    return f"{n / 1e6:.1f} MB"
+
+
+# --- Joplin data API -------------------------------------------------------
+
+TOKEN = json.loads(JOPLIN_SETTINGS.read_text())["api.token"]
+
+
+def joplin(method: str, path: str, raw: bool = False, **params):
+    params["token"] = TOKEN
+    req = urllib.request.Request(f"{JOPLIN}{path}?{urllib.parse.urlencode(params)}", method=method)
+    with urllib.request.urlopen(req, timeout=60) as r:
+        content = r.read()
+    return content if raw else json.loads(content)
+
+
+def joplin_all(path: str, **params) -> list:
+    items, page = [], 1
+    while True:
+        res = joplin("GET", path, page=page, **params)
+        items += res["items"]
+        if not res.get("has_more"):
+            return items
+        page += 1
+
+
+def replace_file(rid: str, data: bytes, title: str) -> None:
+    """Swap a resource's file; Joplin takes the new mime type from the filename's extension."""
+    boundary = uuid.uuid4().hex
+    body = (f"--{boundary}\r\nContent-Disposition: form-data; name=\"props\"\r\n\r\n"
+            f"{json.dumps({'title': title})}\r\n"
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"data\"; filename=\"{title}\"\r\n"
+            f"Content-Type: application/octet-stream\r\n\r\n").encode() + data + f"\r\n--{boundary}--\r\n".encode()
+    url = f"{JOPLIN}/resources/{rid}?{urllib.parse.urlencode({'token': TOKEN})}"
+    req = urllib.request.Request(url, body, {"Content-Type": f"multipart/form-data; boundary={boundary}"}, method="PUT")
+    with urllib.request.urlopen(req, timeout=60):
+        pass
+
+
+# --- compression -----------------------------------------------------------
+
+def magick(*args: str) -> str:
+    return subprocess.run(["magick", *args], check=True, capture_output=True, text=True).stdout
+
+
+def compress(data: bytes, mime: str) -> tuple[bytes, str] | None:
+    """Return (smaller image, extension), or None if it isn't worth replacing."""
+    with tempfile.TemporaryDirectory() as tmp:
+        src = Path(tmp, "in")
+        src.write_bytes(data)
+        first = f"{src}[0]"
+        resize = ["-auto-orient", "-resize", f"{MAX_DIM}x{MAX_DIM}>", "-strip"]
+        jpg = Path(tmp, "out.jpg")
+        candidates = []
+        if mime != "image/png" or magick(first, "-format", "%[opaque]", "info:").strip().lower() == "true":
+            magick(first, *resize, "-quality", str(JPEG_QUALITY), str(jpg))
+            candidates.append((jpg.read_bytes(), "jpg"))
+        if mime == "image/png":
+            png = Path(tmp, "out.png")
+            magick(first, *resize, "-define", "png:compression-level=9", str(png))
+            png_data = png.read_bytes()
+            # screenshots and diagrams stay PNG unless JPEG is dramatically smaller (i.e. it's a photo)
+            if not candidates or len(candidates[0][0]) > len(png_data) / 2:
+                candidates = [(png_data, "png")]
+        best = min(candidates, key=lambda c: len(c[0]))
+        return best if len(best[0]) <= len(data) * (1 - MIN_SAVING) else None
+
+
+# --- main ------------------------------------------------------------------
+
+def ocr_pending() -> set[str]:
+    tag = next((t["id"] for t in joplin_all("/tags", fields="id,title") if t["title"] == OCR_TAG), None)
+    return {n["id"] for n in joplin_all(f"/tags/{tag}/notes", fields="id")} if tag else set()
+
+
+def main() -> int:
+    dry_run = "--dry-run" in sys.argv
+    try:
+        joplin("GET", "/ping", raw=True)
+    except (urllib.error.URLError, OSError):
+        log("Joplin desktop is not running (or Web Clipper service is off); nothing to do")
+        return 0
+
+    checked = json.loads(CHECKED.read_text()) if CHECKED.exists() else {}
+    resources = joplin_all("/resources", fields="id,title,mime,size,file_extension,blob_updated_time")
+    todo = [r for r in resources
+            if r["mime"] in COMPRESSIBLE and r["size"] > MIN_SIZE
+            and checked.get(r["id"]) != r["blob_updated_time"]]
+    if not todo:
+        log("no new large images")
+        return 0
+
+    pending = ocr_pending()
+    before = after = failed = 0
+    for r in todo:
+        name = r["title"] or f"{r['id']}.{r['file_extension']}"
+        if any(n["id"] in pending for n in joplin_all(f"/resources/{r['id']}/notes", fields="id")):
+            log(f"{name}: waiting for OCR, skipping")
+            continue
+        try:
+            data = joplin("GET", f"/resources/{r['id']}/file", raw=True)
+            if len(data) != r["size"]:  # not downloaded from the sync server yet; try again next run
+                log(f"{name}: not downloaded yet, skipping")
+                continue
+            result = compress(data, r["mime"])
+            if result is None:
+                log(f"{name}: {mb(len(data))}, already compact")
+            else:
+                small, ext = result
+                before, after = before + len(data), after + len(small)
+                log(f"{name}: {mb(len(data))} -> {mb(len(small))} {ext.upper()}")
+                if not dry_run:
+                    BACKUPS.mkdir(parents=True, exist_ok=True)
+                    backup = BACKUPS / f"{r['id']}.{r['file_extension'] or 'bin'}"
+                    if not backup.exists():  # keep the true original if an image gets redone
+                        backup.write_bytes(data)
+                    replace_file(r["id"], small, f"{Path(name).stem}.{ext}")
+                    # Joplin leaves the old file behind when the extension changes (e.g. .png -> .jpg)
+                    if r["file_extension"] and r["file_extension"] != ext:
+                        JOPLIN_RESOURCES.joinpath(f"{r['id']}.{r['file_extension']}").unlink(missing_ok=True)
+            if not dry_run:
+                # re-read the timestamp: replacing the file bumps it
+                checked[r["id"]] = joplin("GET", f"/resources/{r['id']}", fields="blob_updated_time")["blob_updated_time"]
+        except Exception as e:  # keep going with the other images
+            failed += 1
+            log(f"{name}: failed: {e}")
+
+    if not dry_run:
+        DATA.mkdir(parents=True, exist_ok=True)
+        CHECKED.write_text(json.dumps(checked))
+    if before:
+        log(f"{'would save' if dry_run else 'saved'} {mb(before - after)} ({mb(before)} -> {mb(after)})")
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
