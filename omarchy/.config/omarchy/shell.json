@@ -1,29 +1,56 @@
 {
-  "version": 1,
-  "idle": {
-    "screensaver": 150,
-    "lock": 300
-  },
   "bar": {
-    "position": "top",
-    "transparent": false,
+    "background": "opaque",
     "layout": {
+      "center": [
+        {
+          "id": "omarchy.clock",
+          "format": "ddd d MMM HH:mm",
+          "formatAlt": "d MMMM 'W'ww yyyy",
+          "verticalFormat": "HH\n—\nmm",
+          "birthYear": 1996,
+          "lifeExpectancy": 80
+        }
+      ],
+      "centerBegin": [
+        {
+          "id": "omarchy.indicators"
+        }
+      ],
+      "centerEnd": [
+        {
+          "id": "omarchy.elsewhen",
+          "cities": [
+            {
+              "name": "Graz",
+              "zone": "Europe/Vienna",
+              "lat": 47.06733,
+              "lon": 15.44197,
+              "region": "Styria, AT"
+            },
+            {
+              "name": "Southport",
+              "zone": "Europe/London",
+              "lat": 53.64581,
+              "lon": -3.01008,
+              "region": "England, GB"
+            }
+          ],
+          "units": "C"
+        },
+        {
+          "id": "omarchy.system-update"
+        },
+        {
+          "id": "omarchy.weather"
+        }
+      ],
       "left": [
         {
           "id": "omarchy.menu"
         },
         {
           "id": "omarchy.workspaces"
-        }
-      ],
-      "center": [
-        {
-          "id": "omarchy.clock",
-          "format": "dddd HH:mm",
-          "formatAlt": "d MMMM 'W'ww yyyy",
-          "verticalFormat": "HH\n—\nmm",
-          "birthYear": 1996,
-          "lifeExpectancy": 80
         }
       ],
       "right": [
@@ -58,49 +85,22 @@
           "id": "omarchy.power"
         }
       ],
-      "centerBegin": [
+      "tray": [
         {
-          "id": "omarchy.indicators"
-        }
-      ],
-      "centerEnd": [
-        {
-          "id": "omarchy.elsewhen",
-          "cities": [
-            {
-              "name": "Vienna",
-              "zone": "Europe/Vienna"
-            },
-            {
-              "name": "Dubai",
-              "zone": "Asia/Dubai"
-            },
-            {
-              "name": "Tokyo",
-              "zone": "Asia/Tokyo"
-            },
-            {
-              "name": "Los Angeles",
-              "zone": "America/Los_Angeles"
-            },
-            {
-              "name": "New York",
-              "zone": "America/New_York"
-            }
-          ]
-        },
-        {
-          "id": "omarchy.system-update"
-        },
-        {
-          "id": "omarchy.weather"
+          "id": "superwhisper.panel"
         }
       ]
-    }
+    },
+    "position": "top"
+  },
+  "idle": {
+    "lock": 300,
+    "screensaver": 150
   },
   "plugins": [
     {
       "id": "adam.stylinator"
     }
-  ]
+  ],
+  "version": 1
 }
