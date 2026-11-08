@@ -32,6 +32,7 @@ stow -D <package>
 | starship | `~/.config/starship.toml` |
 | tmux | `~/.config/tmux` |
 | vale | `~/.config/vale` |
+| wordcraft | `~/.config/wordcraft/Templates` |
 | yazi | `~/.config/yazi` |
 | zathura | `~/.config/zathura` |
 | zsh | `~/.zshrc` |
