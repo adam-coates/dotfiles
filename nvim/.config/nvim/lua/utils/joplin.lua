@@ -228,6 +228,36 @@ function M.open(id)
 	end
 end
 
+-- Dashboard ------------------------------------------------------------------
+
+-- A Snacks dashboard section: the most recently edited notes, each with a key
+-- that opens it (read-only from the database while Joplin is closed).
+function M.dashboard(opts)
+	opts = opts or {}
+	local running = M.running()
+	-- The title is its own item, so it can have a gap before the notes.
+	local title = { title = "Joplin notes", icon = "󰎚 ", padding = 1, label = not running and "read-only" or nil }
+	local notes = { gap = opts.gap, indent = 2, padding = 1 }
+	local section = { pane = opts.pane, title, notes }
+	if not running and vim.fn.filereadable(M.config.database) == 0 then
+		notes[1] = { text = { { "Joplin not found", hl = "Comment" } } }
+		return section
+	end
+	for i, note in ipairs(M.search("") or {}) do
+		if i > (opts.limit or 8) then
+			break
+		end
+		notes[#notes + 1] = {
+			desc = note.title,
+			autokey = true,
+			action = function()
+				M.open(note.id)
+			end,
+		}
+	end
+	return section
+end
+
 -- Picker ---------------------------------------------------------------------
 
 function M.pick()
