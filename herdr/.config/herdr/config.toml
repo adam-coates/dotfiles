@@ -124,3 +124,30 @@ type = "zoom"
 [[ui.tab_bar_right]]
 type = "datetime"
 format = "%H:%M"
+
+# Ctrl-h/j/k/l move between panes, and between Neovim windows when the pane is
+# running Neovim (scripts/navigate.sh). These keys no longer reach other
+# programs, e.g. ctrl+l no longer clears a shell.
+[[keys.command]]
+key = "ctrl+h"
+type = "shell"
+command = "~/.config/herdr/scripts/navigate.sh left"
+description = "focus pane or nvim window left"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "shell"
+command = "~/.config/herdr/scripts/navigate.sh down"
+description = "focus pane or nvim window down"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "shell"
+command = "~/.config/herdr/scripts/navigate.sh up"
+description = "focus pane or nvim window up"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "shell"
+command = "~/.config/herdr/scripts/navigate.sh right"
+description = "focus pane or nvim window right"
