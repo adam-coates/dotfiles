@@ -1,0 +1,2 @@
+# Not a stow package: templates are read from ~/dotfiles/templates directly.
+.*
