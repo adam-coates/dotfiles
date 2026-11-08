@@ -1,22 +1,22 @@
-return {
-	"adam-coates/printer.nvim",
-	config = function()
-		require("printer").setup({
-			python_cmd = "uv run", -- or "python3"
-			printer_vendor_id = "0x04B8", -- Your printer's vendor ID
-			printer_product_id = "0x0E39", -- Your printer's product ID
-			line_width = 48, -- Characters per line
-		})
+-- Receipt printer (Epson TM, over USB). The plugin's defaults are these values,
+-- set here so they're easy to change.
+local printer = require("printer")
 
-		-- Commands
-		vim.api.nvim_create_user_command("PrintBuffer", require("printer").print_buffer, {})
-		vim.api.nvim_create_user_command("PrintLine", require("printer").print_current_line, {})
-		vim.api.nvim_create_user_command("PrintLive", require("printer").toggle_live_mode, {})
+printer.setup({
+	python_cmd = "uv run",
+	printer_vendor_id = "0x04B8",
+	printer_product_id = "0x0E39",
+	line_width = 48, -- characters per line
+})
 
-		-- Keybindings
-		vim.keymap.set("n", "<leader>pb", require("printer").print_buffer, { desc = "Print buffer" })
-		vim.keymap.set("n", "<leader>pl", require("printer").print_current_line, { desc = "Print current line" })
-		vim.keymap.set("v", "<leader>pp", require("printer").print_selection, { desc = "Print selection" })
-		vim.keymap.set("n", "<leader>pL", require("printer").toggle_live_mode, { desc = "Toggle live printing" })
-	end,
-}
+vim.api.nvim_create_user_command("PrintBuffer", printer.print_buffer, {})
+vim.api.nvim_create_user_command("PrintLine", printer.print_current_line, {})
+vim.api.nvim_create_user_command("PrintLive", printer.toggle_live_mode, {})
+
+local map = vim.keymap.set
+map("n", "<leader>pb", printer.print_buffer, { desc = "Print buffer" })
+map("n", "<leader>pl", printer.print_current_line, { desc = "Print current line" })
+map("n", "<leader>pL", printer.toggle_live_mode, { desc = "Toggle live printing" })
+-- print_selection reads the '< and '> marks, which only update once visual mode
+-- ends, so leave it first. Called directly, it printed the previous selection.
+map("x", "<leader>pp", "<Esc><Cmd>lua require('printer').print_selection()<CR>", { desc = "Print selection" })

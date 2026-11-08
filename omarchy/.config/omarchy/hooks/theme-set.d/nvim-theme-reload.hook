@@ -4,7 +4,7 @@
 
 shopt -s nullglob
 
-for socket in "${XDG_RUNTIME_DIR:-/run/user/$UID}"/nvim{,-new}.*; do
+for socket in "${XDG_RUNTIME_DIR:-/run/user/$UID}"/nvim{,-old}.*; do
   [[ -S $socket ]] || continue
   nvim --server "$socket" --remote-expr "v:lua.require'omarchy.theme'.reload()" >/dev/null 2>&1 &
 done

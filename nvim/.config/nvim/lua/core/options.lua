@@ -1,83 +1,119 @@
-local opt = vim.opt
+-- Basic settings
+vim.opt.number = true -- Line numbers
+vim.opt.relativenumber = true -- Relative line numbers
+vim.opt.title = true -- Use titlestring for window
+vim.opt.cursorline = true -- Highlight current line
+vim.opt.wrap = false -- Don't wrap lines
+vim.opt.scrolloff = 8 -- Keep 10 lines above/below cursor
+vim.opt.sidescrolloff = 8 -- Keep 8 columns left/right of cursor
 
--- set spell
-opt.spelllang = "en_gb"
-opt.spell = true
-opt.encoding = "utf-8"
-opt.fileencoding = "utf-8"
+-- Indentation
+vim.opt.tabstop = 4 -- Tab width
+vim.opt.shiftwidth = 4 -- Indent width
+vim.opt.softtabstop = 4 -- Soft tab stop
+vim.opt.expandtab = true -- Use spaces instead of tabs
+vim.opt.smartindent = true -- Smart auto-indenting
 
+-- Spelling (words added with zg go to spell/en.utf-8.add)
+vim.opt.spell = true
+vim.opt.spelllang = "en_gb"
 
--- line numbers
-opt.relativenumber = true
-opt.number = true
+-- Search settings
+vim.opt.ignorecase = true -- Case insensitive search
+vim.opt.smartcase = true -- Case sensitive if uppercase in search
 
--- tabs & indentation
-opt.tabstop = 4
-opt.shiftwidth = 4
-opt.expandtab = true
-opt.autoindent = true
+-- Visual settings
+vim.opt.termguicolors = true -- Enable 24-bit colors
+vim.opt.signcolumn = "yes" -- Always show sign column
+vim.opt.showmatch = true -- Highlight matching brackets
+vim.opt.matchtime = 2 -- How long to show matching bracket
+vim.opt.cmdheight = 0 -- Command line height
+vim.opt.completeopt = "menuone,noinsert,noselect" -- Completion options
+vim.opt.pumheight = 10 -- Popup menu height
+vim.opt.pumblend = 10 -- Popup menu transparency
+vim.opt.winborder = "rounded" -- The default border style of floating windows
+-- vim.opt.lazyredraw = true                          -- Don't redraw during macros
+vim.opt.laststatus = 3
 
--- line wrapping
-opt.wrap = false
+-- File handling
+vim.opt.writebackup = false -- Don't create backup before writing
+vim.opt.swapfile = false -- Don't create swap files
+vim.opt.undofile = true -- Keep undo history after closing a file
+vim.opt.undodir = vim.env.HOME .. "/.vim/undodir" -- Shared with the old config, so history carries over
+vim.opt.updatetime = 300 -- Faster completion
+vim.opt.timeoutlen = 500 -- Key timeout duration
+vim.opt.ttimeoutlen = 0 -- Key code timeout
 
--- search settings
-opt.ignorecase = true
-opt.smartcase = true
+-- Behavior settings
+vim.opt.iskeyword:append("-") -- Treat dash as part of word
+vim.opt.path:append("**") -- Include subdirectories in search
+vim.opt.wildignore:append({ "*/node_modules/*" }) -- Ignore node_modules
+vim.opt.mouse = "" -- Disable mouse support
+vim.opt.clipboard:append("unnamedplus") -- Use system clipboard
 
--- cursor line
-opt.cursorline = true
+-- Cursor settings
+vim.opt.guicursor =
+	"n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175"
 
--- sign column
-opt.signcolumn = "yes"
+-- Folding settings
+vim.opt.foldmethod = "expr" -- Use expression for folding
+vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()" -- Use treesitter for folding
+vim.opt.foldlevel = 99 -- Start with all folds open
 
--- appearance
-opt.termguicolors = true
+-- Split behavior
+vim.opt.splitbelow = true -- Horizontal splits go below
+vim.opt.splitright = true -- Vertical splits go right
 
--- backspace
-opt.backspace = "indent,eol,start"
+-- Key mappings
+vim.g.mapleader = " " -- Set leader key to space
+vim.g.maplocalleader = "," -- Set local leader key
 
--- clipboard
-opt.clipboard:append("unnamedplus")
+-- Built-in netrw
+vim.g.netrw_keepdir = 0 -- Keep the current directory and the browsing directory synced
+vim.g.netrw_localcopydircmd = "cp -r" -- Enable recursive copy of directories
 
--- split windows
-opt.splitright = true
-opt.splitbelow = true
+-- Command-line completion
+vim.opt.wildmode = "longest:full,full"
+vim.opt.wildignore:append({ "*.o", "*.obj", "*.pyc", "*.class", "*.jar" })
 
-opt.iskeyword:append("-")
+-- Diff view
+vim.opt.fillchars:append("diff:╱")
 
--- leave 8 rows bottom and top while scrolling
-opt.scrolloff = 8
-
--- undos saved
-opt.swapfile = false
-opt.backup = false
-opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
-opt.undofile = true
-
-vim.cmd("packadd nvim.undotree")
-vim.keymap.set("n", "<leader>u", require("undotree").open, { desc = "Open undotree" })
-
-opt.foldenable = true
-opt.foldlevel = 99
-opt.foldmethod = 'expr'
--- Default to treesitter folding
-opt.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
--- Prefer LSP folding if client supports it
-vim.api.nvim_create_autocmd('LspAttach', {
-    callback = function(args)
-         local client = vim.lsp.get_client_by_id(args.data.client_id)
-         if client:supports_method('textDocument/foldingRange') then
-             local win = vim.api.nvim_get_current_win()
-             vim.wo[win][0].foldexpr = 'v:lua.vim.lsp.foldexpr()'
-        end
-    end,
- })
-opt.foldtext = ""
-opt.foldcolumn = "0"
-opt.fillchars:append({fold = " "})
-
-opt.winborder = "single"
-
-opt.cmdheight = 0
-
-
+-- For floating cmdline and messages
+require("vim._core.ui2").enable({
+	enable = true,
+	msg = {
+		targets = {
+			[""] = "msg",
+			empty = "cmd",
+			bufwrite = "msg",
+			confirm = "cmd",
+			emsg = "pager",
+			echo = "msg",
+			echomsg = "msg",
+			echoerr = "pager",
+			completion = "cmd",
+			list_cmd = "pager",
+			lua_error = "pager",
+			lua_print = "msg",
+			progress = "pager",
+			rpc_error = "pager",
+			quickfix = "msg",
+			search_cmd = "cmd",
+			search_count = "cmd",
+			shell_cmd = "pager",
+			shell_err = "pager",
+			shell_out = "pager",
+			shell_ret = "msg",
+			undo = "msg",
+			verbose = "pager",
+			wildlist = "cmd",
+			wmsg = "msg",
+			typed_cmd = "cmd",
+		},
+		cmd = { height = 0.5 },
+		dialog = { height = 0.5 },
+		msg = { height = 0.3, timeout = 5000 },
+		pager = { height = 0.5 },
+	},
+})
