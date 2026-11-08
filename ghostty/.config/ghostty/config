@@ -5,6 +5,8 @@ config-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"
 font-family = "CartographCF Nerd Font"
 font-style = Regular
 font-size = 9
+# Line spacing: taller cells, text stays centred (applies to herdr and nvim too)
+adjust-cell-height = 25%
 
 # Window
 window-theme = ghostty
