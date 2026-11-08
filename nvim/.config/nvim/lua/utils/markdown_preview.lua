@@ -46,7 +46,7 @@ function M.open(url)
 end
 
 function M.setup()
-	vim.g.mkdp_filetypes = { "markdown" }
+	vim.g.mkdp_filetypes = { "markdown", "quarto" }
 	vim.cmd([[
 		function! MkdpOpenUrl(url) abort
 			call v:lua.require'utils.markdown_preview'.open(a:url)

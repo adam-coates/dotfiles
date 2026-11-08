@@ -73,7 +73,7 @@
       "src": "https://github.com/omacom-io/lumon.nvim"
     },
     "markdown-preview.nvim": {
-      "rev": "d1afb5a86f12ef7213bf7a402af733f703582b36",
+      "rev": "84c376a52b0e0fc79e471e6c414371f0ed14e597",
       "src": "https://github.com/adam-coates/markdown-preview.nvim"
     },
     "mason-tool-installer.nvim": {

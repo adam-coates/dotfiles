@@ -2,6 +2,16 @@
 -- Headings take their colours from the theme (RenderMarkdownH1..6).
 require("render-markdown").setup({
 	file_types = { "markdown", "quarto" },
+	-- Quarto divs and spans, styled from the document's css: like the preview
+	-- (utils/quarto_render.lua). Runs alongside the builtin markdown rendering.
+	custom_handlers = {
+		markdown = {
+			extends = true,
+			parse = function(ctx)
+				return require("utils.quarto_render").parse(ctx)
+			end,
+		},
+	},
 	heading = {
 		enabled = true,
 		sign = true,
