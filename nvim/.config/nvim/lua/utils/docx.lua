@@ -58,11 +58,11 @@ end
 -- Reading the docx
 ---------------------------------------------------------------------------
 
-local function pandoc(args, input)
+local function pandoc(args, input, cwd)
 	if vim.fn.executable("pandoc") == 0 then
 		return nil, "pandoc isn't installed"
 	end
-	local res = vim.system(vim.list_extend({ "pandoc" }, args), { stdin = input, text = true }):wait()
+	local res = vim.system(vim.list_extend({ "pandoc" }, args), { stdin = input, text = true, cwd = cwd }):wait()
 	if res.code ~= 0 then
 		return nil, vim.trim(res.stderr or "pandoc failed")
 	end
@@ -206,6 +206,8 @@ local function paragraph(list, para, changes, comments, open)
 	return table.concat(old), table.concat(new)
 end
 
+local REFS_HEADINGS = { "references", "bibliography", "literature", "works cited", "literatur", "literaturverzeichnis" }
+
 -- All changes and comments in a docx, with the paragraph text around each.
 function M.read(path)
 	local json, err = pandoc({ "--track-changes=all", "-f", "docx", "-t", "json", path })
@@ -214,6 +216,10 @@ function M.read(path)
 	end
 	local doc = vim.json.decode(json)
 	local paras, changes, comments, open = {}, {}, {}, {}
+	-- The reference list is generated from the .bib file, so changes in it
+	-- have nowhere to go in the source: it's the ::: {#refs} div, or failing
+	-- that whatever follows a References heading.
+	local in_refs, in_list = false, nil
 	local function walk(node)
 		if type(node) ~= "table" then
 			return
@@ -221,11 +227,34 @@ function M.read(path)
 		local inl = (node.t == "Para" or node.t == "Plain") and node.c or (node.t == "Header" and node.c[3])
 		if inl then
 			local old, new = paragraph(inl, #paras + 1, changes, comments, open)
-			paras[#paras + 1] = { old = old, new = new }
+			-- (pandiff's docx has its headings as plain paragraphs)
+			local refs_heading = vim.tbl_contains(REFS_HEADINGS, vim.trim(old:lower()))
+			if node.t == "Header" or refs_heading then
+				in_refs = refs_heading
+			end
+			paras[#paras + 1] = { old = old, new = new, refs = in_refs, list = in_list }
 			return
 		end
-		for _, v in pairs(node) do
-			walk(v)
+		if node.t == "BulletList" or node.t == "OrderedList" then
+			local was = in_list
+			in_list = node.t
+			walk(node.c)
+			in_list = was
+			return
+		end
+		if node.t == "Div" and node.c[1][1] == "refs" then
+			local was = in_refs
+			in_refs = true
+			walk(node.c[2])
+			in_refs = was
+			return
+		end
+		if node.t then -- a block: its children, in order
+			walk(node.c)
+		else
+			for _, v in ipairs(node) do
+				walk(v)
+			end
 		end
 	end
 	walk(doc.blocks)
@@ -264,7 +293,7 @@ function M.read(path)
 		ch.wantL = p.new:sub(ch.ns, ch.ns) == " " or added:sub(1, 1) == " "
 		ch.wantR = p.new:sub(ch.ne + 1, ch.ne + 1) == " " or (added ~= "" and added:sub(-1) == " ")
 		-- At the end of a paragraph the source has no space to match after.
-		if ch.after == "" then
+		if ch.after == "" and ch.old == "" then
 			ch.before = ch.before:gsub(" $", "")
 		end
 		ch.op = ch.old == "" and "insert" or (ch.new == "" and "delete" or "replace")
@@ -280,6 +309,8 @@ function M.read(path)
 	end
 	for i, item in ipairs(items) do
 		item.order = i -- document order, for edits at the same spot
+		item.refs = paras[item.para].refs
+		item.list = paras[item.para].list
 	end
 	table.sort(items, function(a, b)
 		if a.para ~= b.para then
@@ -299,12 +330,23 @@ end
 
 -- The source's prose with markdown syntax stripped, and for each byte of it
 -- the source range it came from: pos[i] = { row, start_col, end_col }.
-local function index(lines)
-	local text, pos = {}, {}
+-- Citations in the source are swapped for their rendered text (`rendered`,
+-- one entry per citation in order; see cite_text) so they compare equal to
+-- the docx; without it they're dropped. The citations found are returned in
+-- `cites`.
+local function index(lines, rendered)
+	local text, pos, cites = {}, {}, {}
 	local function put(s, row, sc, ec)
 		for i = 1, #s do
 			text[#text + 1] = s:sub(i, i)
 			pos[#pos + 1] = { row, sc, ec }
+		end
+	end
+	local function cite(src, row, sc, ec)
+		cites[#cites + 1] = src
+		local r = rendered and rendered[#cites]
+		if r then
+			put(r, row, sc, ec)
 		end
 	end
 	local function space(row, col)
@@ -368,12 +410,25 @@ local function index(lines)
 				elseif two == "![" then -- image: dropped, as in the docx text
 					local e = line:find("%b()", col) and select(2, line:find("^!%b[]%b()", col))
 					skip = e and e + 1 or col + 2
-				elseif two == "[@" or two == "[^" or (two == "[-" and line:sub(col + 2, col + 2) == "@") then
+				elseif two == "[^" then -- footnote reference
 					local e = select(2, line:find("^%b[]", col))
 					skip = e and e + 1 or col + 1
-				elseif ch == "@" and (col == 1 or line:sub(col - 1, col - 1):match("[%s%(%[]")) then
+				elseif
+					ch == "["
+					and line:find("^%b[]", col)
+					and line:sub(col, select(2, line:find("^%b[]", col))):find("@[%w_]")
+					and not line:sub(select(2, line:find("^%b[]", col)) + 1):match("^[({]")
+				then -- [@key], [see @a, p. 3; @b]
+					local e = select(2, line:find("^%b[]", col))
+					cite(line:sub(col, e), row, col - 1, e)
+					skip = e + 1
+				elseif ch == "@" and (col == 1 or line:sub(col - 1, col - 1):match("[%s%(%[-]")) and line:sub(col + 1, col + 1):match("[%w_]") then
 					local e = select(2, line:find("^@[%w_:.#$%%&+?<>~/-]+", col))
-					skip = e and (line:sub(e, e):match("[.:]") and e or e + 1) or col + 1
+					if line:sub(e, e):match("[.:]") then -- @smith2020. ends the sentence
+						e = e - 1
+					end
+					cite(line:sub(col, e), row, col - 1, e)
+					skip = e + 1
 				elseif ch == "]" and line:sub(col + 1, col + 1) == "(" then
 					local e = select(2, line:find("^%b()", col + 1))
 					skip = e and e + 1 or col + 1
@@ -413,7 +468,66 @@ local function index(lines)
 			end
 		end
 	end
-	return { text = table.concat(text), pos = pos }
+	return { text = table.concat(text), pos = pos, cites = cites }
+end
+
+-- Rendered text of the source's citations ("@smith2020" -> "Smith and Doe
+-- (2020)"), from pandoc --citeproc with the document's own bibliography and
+-- style. Cached until the citations change. false where it couldn't be
+-- rendered (unknown keys, Quarto cross-references like @fig-x).
+local cite_cache = {}
+local function cite_text(buf, cites)
+	local name = vim.api.nvim_buf_get_name(buf)
+	local key = name .. "\0" .. table.concat(cites, "\0")
+	if cite_cache[buf] and cite_cache[buf].key == key then
+		return cite_cache[buf].rendered
+	end
+	local rendered = {}
+	local json = pandoc(
+		{ "-f", "markdown", "-t", "json", "--citeproc" },
+		table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), "\n"),
+		vim.fs.dirname(name)
+	)
+	local ok, doc = pcall(vim.json.decode, json or "")
+	local found = {} -- { ids = "a,b", text = "..." } in document order
+	local function walk(node)
+		if type(node) ~= "table" then
+			return
+		end
+		if node.t == "Cite" then
+			local ids = vim.tbl_map(function(c)
+				return c.citationId
+			end, node.c[1])
+			found[#found + 1] = { ids = table.concat(ids, ","), text = plain(node.c[2]) }
+			return
+		end
+		for _, v in ipairs(node.t and { node.c } or node) do
+			walk(v)
+		end
+	end
+	if ok and type(doc) == "table" then
+		walk(doc.blocks)
+	end
+	local j = 1
+	for k, src in ipairs(cites) do
+		local ids = {}
+		for id in src:gmatch("@([%w_][%w_:.#$%%&+?<>~/-]*)") do
+			ids[#ids + 1] = id:gsub("[.:]+$", "")
+		end
+		ids = table.concat(ids, ",")
+		rendered[k] = false
+		for look = j, math.min(j + 3, #found) do
+			if found[look].ids == ids then
+				local text = found[look].text
+				-- pandoc marks keys it couldn't find with "key?"
+				rendered[k] = not text:find("?", 1, true) and text ~= "" and text
+				j = look + 1
+				break
+			end
+		end
+	end
+	cite_cache[buf] = { key = key, rendered = rendered }
+	return rendered
 end
 
 -- The one place `needle` occurs in the source text, or nil.
@@ -525,11 +639,88 @@ end
 
 -- Locate every pending item in the source as it is now.
 local function relocate(review)
-	local idx = index(vim.api.nvim_buf_get_lines(review.buf, 0, -1, false))
+	local lines = vim.api.nvim_buf_get_lines(review.buf, 0, -1, false)
+	local idx = index(lines)
+	if #idx.cites > 0 then
+		idx = index(lines, cite_text(review.buf, idx.cites))
+	end
 	for _, item in ipairs(review.items) do
-		item.loc = not item.done and locate(idx, item) or nil
+		item.loc = not item.done and not item.refs and locate(idx, item) or nil
 	end
 	diagnostics(review)
+end
+
+-- Rendered citations in new text back to citation keys ("Lee (2018)" ->
+-- "@lee2018", "(Lee 2018)" -> "[@lee2018]"), for every entry in the
+-- document's bibliography, rendered in its own citation style.
+local uncite_cache = {}
+local function uncite_map(buf)
+	local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+	if lines[1] ~= "---" then
+		return {}
+	end
+	local front = { "---" }
+	for i = 2, #lines do
+		if lines[i] == "---" or lines[i] == "..." then
+			break
+		end
+		if not lines[i]:match("^nocite:") then
+			front[#front + 1] = lines[i]
+		end
+	end
+	local name = vim.api.nvim_buf_get_name(buf)
+	local key = name .. "\0" .. table.concat(front, "\n")
+	if uncite_cache[key] then
+		return uncite_cache[key]
+	end
+	local dir = vim.fs.dirname(name)
+	local map = {}
+	-- Every key in the bibliography: nocite @* puts them all in the refs list.
+	local doc = vim.list_extend(vim.deepcopy(front), { 'nocite: "@*"', "---" })
+	local json = pandoc({ "-f", "markdown", "-t", "json", "--citeproc" }, table.concat(doc, "\n"), dir)
+	local keys = {}
+	for id in (json or ""):gmatch('"ref%-([^"]+)"') do
+		keys[#keys + 1] = id
+	end
+	if #keys > 0 then
+		doc = vim.list_extend(vim.deepcopy(front), { "---", "" })
+		for _, k in ipairs(keys) do
+			vim.list_extend(doc, { "@" .. k, "", "[@" .. k .. "]", "" })
+		end
+		json = pandoc({ "-f", "markdown", "-t", "json", "--citeproc" }, table.concat(doc, "\n"), dir)
+		local ok, parsed = pcall(vim.json.decode, json or "")
+		local i = 0
+		for _, block in ipairs(ok and parsed.blocks or {}) do
+			local c = block.t == "Para" and block.c[1]
+			if c and c.t == "Cite" then
+				i = i + 1
+				local k = keys[math.ceil(i / 2)]
+				local text = plain(c.c[2])
+				if text ~= "" and not text:find("?", 1, true) then
+					map[#map + 1] = { text = text, cite = i % 2 == 1 and "@" .. k or "[@" .. k .. "]" }
+				end
+			end
+		end
+	end
+	table.sort(map, function(a, b)
+		return #a.text > #b.text
+	end)
+	uncite_cache[key] = map
+	return map
+end
+
+local function uncite(buf, text)
+	if not text:find("%d%d%d%d") then -- no year, no citation
+		return text
+	end
+	for _, m in ipairs(uncite_map(buf)) do
+		local s, e = text:find(m.text, 1, true)
+		while s do
+			text = text:sub(1, s - 1) .. m.cite .. text:sub(e + 1)
+			s, e = text:find(m.text, s + #m.cite, true)
+		end
+	end
+	return text
 end
 
 local function isspace(ch)
@@ -541,7 +732,22 @@ end
 local function apply(buf, item)
 	local r1, c1, r2, c2 = unpack(item.loc)
 	if item.newpara then
-		return vim.api.nvim_buf_set_text(buf, r1, c1, r1, c1, vim.split(item.new, "\n"))
+		local text = uncite(buf, item.new)
+		-- New list items after a list item: the same marker, no blank line.
+		local line = vim.api.nvim_buf_get_lines(buf, r1, r1 + 1, true)[1]
+		local indent, num, sep = line:match("^(%s*)(%d+)([.)]%s+)")
+		local bullet = line:match("^%s*[-*+]%s+")
+		if item.list and (bullet or num) then
+			local out = {}
+			for para in vim.gsplit(vim.trim(text), "\n\n", { plain = true }) do
+				if num then
+					num = tostring(tonumber(num) + 1)
+				end
+				out[#out + 1] = (bullet or (indent .. num .. sep)) .. para
+			end
+			text = "\n" .. table.concat(out, "\n")
+		end
+		return vim.api.nvim_buf_set_text(buf, r1, c1, r1, c1, vim.split(text, "\n"))
 	end
 	local line1 = vim.api.nvim_buf_get_lines(buf, r1, r1 + 1, true)[1]
 	local line2 = vim.api.nvim_buf_get_lines(buf, r2, r2 + 1, true)[1]
@@ -550,7 +756,7 @@ local function apply(buf, item)
 	local function ws(ch)
 		return isspace(ch) or ch == "\n"
 	end
-	local text = item.new
+	local text = uncite(buf, item.new)
 	if text == "" then
 		if item.wantL or item.wantR then
 			if L:match("[%(%[]") and isspace(R) then -- "( x" -> "(x"
@@ -601,6 +807,8 @@ local function accept(review, list)
 			item.done = true
 		elseif item.loc then
 			edits[#edits + 1] = item
+		elseif item.refs then
+			review.refs_missed = (review.refs_missed or 0) + 1
 		else
 			missed = missed + 1
 		end
@@ -692,6 +900,8 @@ local function preview(review, ctx, item)
 		lines[#lines + 1] = ("── %s:%d ──"):format(srcname, item.loc[1] + 1)
 		local from = math.max(0, item.loc[1] - 2)
 		vim.list_extend(lines, vim.api.nvim_buf_get_lines(review.buf, from, item.loc[3] + 3, false))
+	elseif item.refs then
+		lines[#lines + 1] = "── in the reference list, which is generated: change the .bib file ──"
 	else
 		lines[#lines + 1] = ("── not found in %s: <a-y> yanks the new text ──"):format(srcname)
 	end
@@ -768,7 +978,10 @@ function M.review(docx, src_buf)
 			end
 			return {
 				{ icon, hl },
-				{ ("%-4s "):format(item.loc and tostring(item.loc[1] + 1) or "?"), item.loc and "LineNr" or "WarningMsg" },
+				{
+					("%-4s "):format(item.loc and tostring(item.loc[1] + 1) or item.refs and "bib" or "?"),
+					item.loc and "LineNr" or item.refs and "Comment" or "WarningMsg",
+				},
 				{ summary(item) .. "  " },
 				{ item.author or "", "Comment" },
 			}
@@ -793,6 +1006,10 @@ function M.review(docx, src_buf)
 				update(picker)
 				if missed > 0 then
 					notify(("%d change%s couldn't be located in the source."):format(missed, missed == 1 and "" or "s"), vim.log.levels.WARN)
+				end
+				if (review.refs_missed or 0) > 0 then
+					notify("Changes to the reference list go in the .bib file (dismiss them with <a-x>).", vim.log.levels.WARN)
+					review.refs_missed = 0
 				end
 			end,
 			docx_dismiss = function(picker)
