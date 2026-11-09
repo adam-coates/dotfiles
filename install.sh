@@ -43,3 +43,11 @@ if [[ "$(uname -m)" == "aarch64" ]] && grep -q apple /proc/device-tree/compatibl
     echo "Applied aarch64 bar layout"
   fi
 fi
+
+# Omarchy renders our themed templates (omarchy/.config/omarchy/themed/*.tpl,
+# e.g. the markdown preview's theme) only when a theme is applied, so reapply
+# the current one now that they're in place.
+if command -v omarchy-theme-refresh >/dev/null 2>&1; then
+  omarchy-theme-refresh
+  echo "Refreshed Omarchy theme"
+fi
