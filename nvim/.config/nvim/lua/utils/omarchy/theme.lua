@@ -37,9 +37,14 @@ vim.api.nvim_create_autocmd("ColorScheme", {
   end,
 })
 
+-- Without Omarchy (e.g. on macOS) there's no theme name file, so use this
+-- theme from overrides.lua instead.
+M.fallback = "gruvbox-material"
+
 local function read()
-  local names = vim.uv.fs_stat(M.name_file) and vim.fn.readfile(M.name_file, "", 1) or {}
-  local override = require("utils.omarchy.overrides")[names[1]]
+  local omarchy = vim.uv.fs_stat(M.name_file) ~= nil
+  local name = omarchy and vim.fn.readfile(M.name_file, "", 1)[1] or M.fallback
+  local override = require("utils.omarchy.overrides")[name]
   if override then
     return { plugins = { override.plugin }, colorscheme = override.colorscheme }
   end
