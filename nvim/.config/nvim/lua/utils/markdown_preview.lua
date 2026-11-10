@@ -73,14 +73,17 @@ function M.setup_build()
 				-- rewrites the tracked app/yarn.lock, so restore it to keep the plugin's
 				-- git checkout clean for the next update.
 				local app = data.path .. "/app"
+				-- on_exit runs in a fast event context, where :wait() (vim.wait) is
+				-- not allowed, so chain the git restore through its own callback.
 				vim.system({ "npm", "ci", "--omit=dev" }, { cwd = app }, function(res)
-					vim.system({ "git", "checkout", "--", "yarn.lock" }, { cwd = app }):wait()
-					vim.schedule(function()
-						local ok = res.code == 0
-						vim.notify(
-							"markdown-preview: npm ci " .. (ok and "done" or "failed"),
-							ok and vim.log.levels.INFO or vim.log.levels.ERROR
-						)
+					vim.system({ "git", "checkout", "--", "yarn.lock" }, { cwd = app }, function()
+						vim.schedule(function()
+							local ok = res.code == 0
+							vim.notify(
+								"markdown-preview: npm ci " .. (ok and "done" or "failed"),
+								ok and vim.log.levels.INFO or vim.log.levels.ERROR
+							)
+						end)
 					end)
 				end)
 			end
