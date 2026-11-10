@@ -23,7 +23,12 @@ require("quarto").setup({
 vim.api.nvim_create_autocmd("FileType", {
 	group = vim.api.nvim_create_augroup("UserOtterMarkdown", { clear = true }),
 	pattern = "markdown",
-	callback = function()
+	callback = function(ev)
+		-- Skip LSP hover/signature floats and other scratch buffers: they are
+		-- markdown too, and otter would create a ".otter.lua" next to cwd for them.
+		if vim.bo[ev.buf].buftype ~= "" or vim.api.nvim_buf_get_name(ev.buf) == "" then
+			return
+		end
 		require("otter").activate()
 	end,
 })
