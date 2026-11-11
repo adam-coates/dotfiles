@@ -18,4 +18,4 @@ hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 
 -- Touchpad scroll direction: false = traditional (swipe up scrolls up),
 -- true = macOS-style natural scrolling (swipe up moves the content up).
-hl.config({ input = { touchpad = { natural_scroll = false } } })
+hl.config({ input = { touchpad = { natural_scroll = true } } })
