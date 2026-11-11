@@ -16,5 +16,6 @@ hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 -- hl.gesture({ fingers = 3, direction = "left", action = function() hl.dispatch(hl.dsp.focus({ direction = "l" })) end })
 -- hl.gesture({ fingers = 3, direction = "right", action = function() hl.dispatch(hl.dsp.focus({ direction = "r" })) end })
 
--- Reverse touchpad scroll direction (macOS-style natural scrolling)
-hl.config({ input = { touchpad = { natural_scroll = true } } })
+-- Touchpad scroll direction: false = traditional (swipe up scrolls up),
+-- true = macOS-style natural scrolling (swipe up moves the content up).
+hl.config({ input = { touchpad = { natural_scroll = false } } })
