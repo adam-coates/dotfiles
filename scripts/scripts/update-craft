@@ -1,40 +1,79 @@
 #!/usr/bin/env bash
-# Update the storytold *craft AppImages in ~/Applications from their GitHub releases.
-# appimagelauncherd watches ~/Applications, so it integrates the new file and drops the old menu entry.
+# Install or update the storytold *craft AppImages in ~/Applications from their GitHub releases.
+#   update-craft              -> every app in APPS
+#   update-craft deckcraft …  -> only the named apps
+# Missing apps are installed; present ones are updated only when a newer release exists.
+# appimagelauncherd (if running) watches ~/Applications and handles menu integration.
 set -euo pipefail
 
 APPDIR="$HOME/Applications"
 OWNER="storytold"
-ARCH="linux-x86_64"
+APPS=(anicraft artcraft cadcraft deckcraft designcraft effectcraft figcraft
+      filmcraft gridcraft lightcraft materialcraft pdfcraft photocraft)
 
+case "$(uname -m)" in
+    x86_64 | amd64) ARCH="linux-x86_64" ;;
+    aarch64 | arm64) ARCH="linux-aarch64" ;;
+    *) echo "unsupported architecture: $(uname -m)" >&2; exit 1 ;;
+esac
+
+(($#)) && APPS=("$@")
+
+# Unauthenticated GitHub API calls are capped at 60/hour; use a token when one is around.
+api_auth=()
+token=${GITHUB_TOKEN:-${GH_TOKEN:-$(gh auth token 2>/dev/null || true)}}
+[[ -n "$token" ]] && api_auth=(-H "Authorization: Bearer $token")
+mkdir -p "$APPDIR"
 shopt -s nullglob
-for old in "$APPDIR"/*craft-*-"$ARCH"*.AppImage; do
-    base=$(basename "$old")
-    app=${base%%-*}                                  # deckcraft
-    current=$(sed -E "s/^$app-([0-9.]+)-.*/\1/" <<<"$base")
 
-    json=$(curl -fsSL "https://api.github.com/repos/$OWNER/$app/releases/latest")
-    latest=$(grep -m1 '"tag_name"' <<<"$json" | sed -E 's/.*"v?([^"]+)".*/\1/')
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
 
-    if [[ "$(printf '%s\n%s\n' "$current" "$latest" | sort -V | tail -1)" == "$current" ]]; then
+newer() { [[ "$1" != "$2" && "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" == "$1" ]]; }
+
+failed=()
+for app in "${APPS[@]}"; do
+    # Installed copy for this arch, if any (keep the newest if there are several).
+    installed=("$APPDIR/$app"-[0-9]*-"$ARCH".AppImage)
+    current=""
+    for f in "${installed[@]}"; do
+        v=$(basename "$f"); v=${v#"$app-"}; v=${v%"-$ARCH.AppImage"}
+        if [[ -z "$current" ]] || newer "$v" "$current"; then current=$v; fi
+    done
+
+    if ! json=$(curl -fsSL "${api_auth[@]}" "https://api.github.com/repos/$OWNER/$app/releases/latest"); then
+        echo "$app: could not fetch latest release" >&2; failed+=("$app"); continue
+    fi
+    # Take the version and URLs from the asset itself: tags aren't consistent (v0.18.0 vs artcraft-v0.41.1).
+    asset_url=$(grep -oE "\"browser_download_url\": *\"[^\"]*/$app-[0-9][^\"]*-$ARCH\.AppImage\"" <<<"$json" \
+        | head -1 | sed -E 's/.*"(https[^"]+)"/\1/') || true
+    if [[ -z "$asset_url" ]]; then
+        echo "$app: no $ARCH AppImage in latest release" >&2; failed+=("$app"); continue
+    fi
+    file=${asset_url##*/}
+    latest=${file#"$app-"}; latest=${latest%"-$ARCH.AppImage"}
+
+    if [[ -n "$current" ]] && ! newer "$latest" "$current"; then
         echo "$app: up to date ($current)"
         continue
     fi
 
-    echo "$app: $current -> $latest"
-    file="$app-$latest-$ARCH.AppImage"
-    url="https://github.com/$OWNER/$app/releases/download/v$latest"
-    tmp=$(mktemp -d)
-    trap 'rm -rf "$tmp"' EXIT
+    if [[ -n "$current" ]]; then echo "$app: $current -> $latest"; else echo "$app: installing $latest"; fi
 
-    curl -fL --progress-bar -o "$tmp/$file" "$url/$file"
-    curl -fsSL -o "$tmp/SHA256SUMS.txt" "$url/SHA256SUMS.txt"
-    (cd "$tmp" && grep " $file\$" SHA256SUMS.txt | sha256sum -c --quiet -)
+    rm -f "$tmp"/*
+    if ! curl -fL --progress-bar -o "$tmp/$file" "$asset_url" \
+        || ! curl -fsSL -o "$tmp/SHA256SUMS.txt" "${asset_url%/*}/SHA256SUMS.txt" \
+        || ! (cd "$tmp" && grep " \*\?$file\$" SHA256SUMS.txt | sha256sum -c --quiet -); then
+        echo "$app: download or checksum failed" >&2; failed+=("$app"); continue
+    fi
 
     chmod +x "$tmp/$file"
     mv "$tmp/$file" "$APPDIR/$file"
-    rm -f "$old"
-    rm -rf "$tmp"
-    trap - EXIT
+    for f in "${installed[@]}"; do [[ "$f" != "$APPDIR/$file" ]] && rm -f "$f"; done
     echo "$app: installed $latest"
 done
+
+if ((${#failed[@]})); then
+    echo "failed: ${failed[*]}" >&2
+    exit 1
+fi
