@@ -46,6 +46,19 @@ mkdir -p <name>/.config/<name>
 stow <name>
 ```
 
+## System setup (not stowed)
+
+`system/` holds setup that needs root, so `install.sh` skips it. Run these by hand.
+
+- **Uni Graz VPN** (`~/scripts/univpn2.sh`, Linux only):
+  ```bash
+  system/univpn/setup.sh first.last@uni-graz.at
+  ~/scripts/openconnect-sso-compat --authenticate shell   # once, saves password/TOTP to the keyring
+  ```
+  Installs openconnect and openconnect-sso, the root helpers `vpn-connect-oc` and
+  `vpn-disconnect-oc` in `/usr/local/bin`, a sudoers rule allowing only those two
+  without a password, and `~/.config/openconnect-sso/config.toml` from the template.
+
 ## Notes
 
 - Scripts live in `~/scripts` (managed via stow, not under `.config`)

@@ -1,0 +1,55 @@
+on_disconnect = ""
+
+[default_profile]
+address = "univpn.uni-graz.at"
+user_group = ""
+name = "Bedienstete"
+
+[credentials]
+username = "YOUR_USERNAME@uni-graz.at"
+
+[auto_fill_rules]
+[[auto_fill_rules."https://*"]]
+selector = "#input-error"
+action = "stop"
+
+[[auto_fill_rules."https://*"]]
+selector = "#input-error-username"
+action = "stop"
+
+[[auto_fill_rules."https://*"]]
+selector = "#input-error-password"
+action = "stop"
+
+[[auto_fill_rules."https://*"]]
+selector = "#input-error-otp-code"
+action = "stop"
+
+[[auto_fill_rules."https://*"]]
+selector = "#kc-error-message"
+action = "stop"
+
+[[auto_fill_rules."https://*"]]
+selector = ".alert-error"
+action = "stop"
+
+[[auto_fill_rules."https://*"]]
+selector = "input#username"
+fill = "username"
+
+[[auto_fill_rules."https://*"]]
+selector = "input#password"
+fill = "password"
+
+[[auto_fill_rules."https://*"]]
+selector = "input#otp"
+fill = "totp"
+
+[[auto_fill_rules."https://*"]]
+selector = "input[name=totp]"
+fill = "totp"
+
+[[auto_fill_rules."https://*"]]
+selector = "input#kc-login"
+action = "click"
+

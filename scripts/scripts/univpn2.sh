@@ -20,7 +20,7 @@ is_connected() {
 }
 
 if is_connected; then
-    sudo /usr/local/bin/vpn-disconnect-oc
+    sudo -n /usr/local/bin/vpn-disconnect-oc
     notify "VPN" "Uni Graz VPN disconnected"
     exit 0
 fi
@@ -50,15 +50,10 @@ if [ -z "$COOKIE" ] || [ -z "$HOST" ]; then
     exit 1
 fi
 
-# Step 2: build the tunnel as root, daemonized.
-if echo "$COOKIE" | sudo openconnect \
-        --protocol=anyconnect \
-        --cookie-on-stdin \
-        --servercert="$FINGERPRINT" \
-        --background \
-        --pid-file="$PIDFILE" \
-        --quiet \
-        "$HOST" >>"$TUNLOG" 2>&1; then
+# Step 2: build the tunnel as root, daemonized. vpn-connect-oc fixes every
+# openconnect option itself, so it can be allowed in sudoers without a password.
+if echo "$COOKIE" | sudo -n /usr/local/bin/vpn-connect-oc "$HOST" "$FINGERPRINT" \
+        >>"$TUNLOG" 2>&1; then
     # --background returns as soon as it daemonizes, before the tun device is up.
     for _ in $(seq 40); do
         ip -brief link show 2>/dev/null | grep -q '^tun' && break
@@ -71,6 +66,6 @@ if echo "$COOKIE" | sudo openconnect \
         exit 1
     fi
 else
-    notify -u critical "VPN" "Tunnel failed to start"
+    notify -u critical "VPN" "Tunnel failed to start - see $TUNLOG"
     exit 1
 fi

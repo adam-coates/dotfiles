@@ -61,6 +61,8 @@ failed=()
 
 for pkg in */; do
   pkg="${pkg%/}"
+  # system/ holds root-level setup (e.g. system/univpn/setup.sh), not stow packages.
+  [[ "$pkg" == system ]] && continue
   if is_omarchy_pkg "$pkg" && ! is_omarchy; then
     echo "Skipped $pkg (not running Omarchy)"
     continue

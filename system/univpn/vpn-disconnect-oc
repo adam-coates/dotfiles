@@ -1,0 +1,24 @@
+#!/bin/bash
+# Stop the openconnect tunnel started by vpn-connect-oc. Run via sudo.
+# SIGINT makes openconnect log out of the session cleanly before exiting.
+PIDFILE=/run/openconnect-vpn.pid
+
+pid=""
+if [[ -f $PIDFILE ]]; then
+  pid="$(<"$PIDFILE")"
+  [[ $pid =~ ^[0-9]+$ && "$(cat /proc/"$pid"/comm 2>/dev/null)" == openconnect ]] || pid=""
+fi
+
+if [[ -n $pid ]]; then
+  kill -INT "$pid"
+else
+  pkill -INT -x openconnect || true
+fi
+
+for _ in $(seq 20); do
+  pgrep -x openconnect >/dev/null || break
+  sleep 0.5
+done
+pgrep -x openconnect >/dev/null && pkill -TERM -x openconnect
+rm -f "$PIDFILE"
+exit 0

@@ -1,0 +1,24 @@
+#!/bin/bash
+# Start the Uni Graz openconnect tunnel as root. Run via sudo from univpn2.sh.
+# Takes only the host and server fingerprint; the cookie arrives on stdin.
+# Every other openconnect option is fixed here, so a passwordless sudo rule
+# for this helper can't be used to run arbitrary scripts as root.
+set -euo pipefail
+
+PIDFILE=/run/openconnect-vpn.pid
+host="${1:-}"
+fingerprint="${2:-}"
+
+if [[ ! $host =~ ^(https://)?univpn\.uni-graz\.at(:443)?(/[A-Za-z0-9._-]*)*$ ]]; then
+  echo "vpn-connect-oc: refusing host '$host'" >&2
+  exit 2
+fi
+if [[ -n $fingerprint && ! $fingerprint =~ ^[A-Za-z0-9:=+/_-]+$ ]]; then
+  echo "vpn-connect-oc: refusing fingerprint '$fingerprint'" >&2
+  exit 2
+fi
+
+args=(--protocol=anyconnect --cookie-on-stdin --background --pid-file="$PIDFILE" --quiet)
+[[ -n $fingerprint ]] && args+=(--servercert="$fingerprint")
+
+exec /usr/bin/openconnect "${args[@]}" "$host"
