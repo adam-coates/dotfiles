@@ -102,7 +102,11 @@ fi
 # On Apple Silicon (aarch64), the MacBook notch covers the center of the top
 # bar. Replace the centered-clock layout with one that puts everything in the
 # right section.
-if is_omarchy && [[ "$(uname -m)" == "aarch64" ]] && grep -q apple /proc/device-tree/compatible 2>/dev/null; then
+is_apple_silicon() {
+  [[ "$(uname -m)" == "aarch64" ]] && grep -q apple /proc/device-tree/compatible 2>/dev/null
+}
+
+if is_omarchy && is_apple_silicon; then
   aarch_shell="omarchy/.config/omarchy/shell.aarch64.json"
   if [[ -f "$aarch_shell" ]]; then
     target="$HOME/.config/omarchy/shell.json"
@@ -110,6 +114,16 @@ if is_omarchy && [[ "$(uname -m)" == "aarch64" ]] && grep -q apple /proc/device-
     cp "$aarch_shell" "$target"
     echo "Applied aarch64 bar layout"
   fi
+fi
+
+# Per-device terminal settings (e.g. font size): kitty.conf includes
+# device.conf if it exists. Only the MacBook gets one; the desktop uses the
+# defaults in kitty.conf.
+if is_apple_silicon; then
+  ln -sfn devices/mac.conf "$HOME/.config/kitty/device.conf"
+  echo "Linked kitty device config: mac"
+else
+  rm -f "$HOME/.config/kitty/device.conf"
 fi
 
 # Omarchy renders our themed templates (omarchy/.config/omarchy/themed/*.tpl,
