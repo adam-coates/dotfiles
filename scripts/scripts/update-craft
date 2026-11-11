@@ -11,13 +11,16 @@ case "$(uname -m)" in
     *) echo "unsupported architecture: $(uname -m)" >&2; exit 1 ;;
 esac
 
+# Use the gh login if there is one: unauthenticated GitHub API calls are capped at 60/hour.
+token=$(gh auth token 2>/dev/null || true)
+
 shopt -s nullglob
 for old in "$APPDIR"/*craft-*-"$ARCH"*.AppImage; do
     base=$(basename "$old")
     app=${base%%-*}                                  # deckcraft
     current=$(sed -E "s/^$app-([0-9.]+)-.*/\1/" <<<"$base")
 
-    json=$(curl -fsSL "https://api.github.com/repos/$OWNER/$app/releases/latest")
+    json=$(curl -fsSL ${token:+-H "Authorization: Bearer $token"} "https://api.github.com/repos/$OWNER/$app/releases/latest")
     latest=$(grep -m1 '"tag_name"' <<<"$json" | sed -E 's/.*"v?([^"]+)".*/\1/')
 
     if [[ "$(printf '%s\n%s\n' "$current" "$latest" | sort -V | tail -1)" == "$current" ]]; then
