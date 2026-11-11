@@ -50,3 +50,12 @@ if o.dictation_installed and o.dictation_installed() then
   o.bind("SUPER + CTRL + X", "Toggle dictation", "omarchy-dictation toggle")
   o.bind_hold("F9", "Start dictation (push-to-talk)", "omarchy-dictation start", "Stop dictation (push-to-talk)", "omarchy-dictation stop")
 end
+
+-- Keyboard backlight on/off (the MacBook Air has no backlight keys).
+-- Off saves the current level; on restores it, falling back to 50%.
+-- On this keyboard F6 sends XF86KbdBrightnessUp unless Fn is held, so bind both.
+local kbd_backlight_toggle =
+  "if [ \"$(brightnessctl -d kbd_backlight get)\" -gt 0 ]; then brightnessctl -q -d kbd_backlight -s set 0; " ..
+  "else brightnessctl -q -d kbd_backlight -r; [ \"$(brightnessctl -d kbd_backlight get)\" -gt 0 ] || brightnessctl -q -d kbd_backlight set 50%; fi"
+o.bind("SUPER + F6", "Toggle keyboard backlight", kbd_backlight_toggle, { locked = true })
+o.bind("SUPER + XF86KbdBrightnessUp", "Toggle keyboard backlight", kbd_backlight_toggle, { locked = true })
