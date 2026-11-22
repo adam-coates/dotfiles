@@ -4,6 +4,9 @@ luasnip.config.setup({ store_selection_keys = "<C-s>" })
 require("luasnip.loaders.from_vscode").lazy_load()
 luasnip.filetype_extend("quarto", { "markdown" })
 
+-- Selection-aware versions of friendly-snippets' Quarto/Markdown snippets.
+require("plugins.snippets")
+
 vim.keymap.set("i", "<C-u>", function()
 	require("luasnip.extras.select_choice")()
 end, { desc = "Select snippet choice" })
