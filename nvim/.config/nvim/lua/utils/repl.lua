@@ -219,7 +219,8 @@ function M.setup()
 		callback = function(ev)
 			vim.b[ev.buf].slime_config = default_config()
 			if vim.tbl_contains({ "python", "sh", "bash", "zsh" }, vim.bo[ev.buf].filetype) then
-				vim.b[ev.buf].slime_cell_delimiter = "# %%"
+				-- A search pattern: matches both "# %%" and "#%%" at the start of a line.
+				vim.b[ev.buf].slime_cell_delimiter = [[^\s*#\s*%%]]
 			end
 		end,
 	})
@@ -244,7 +245,9 @@ function M.setup()
 	end, { desc = "Send cell to REPL" })
 	map("x", "<C-c><C-c>", function()
 		M.update()
-		vim.cmd("'<,'>SlimeRegionSend")
+		-- Leave visual mode first, so send_op reselects this selection with gv.
+		vim.cmd.normal({ vim.keycode("<Esc>"), bang = true })
+		vim.fn["slime#send_op"](vim.fn.visualmode(), 1)
 	end, { desc = "Send selection to REPL" })
 end
 
