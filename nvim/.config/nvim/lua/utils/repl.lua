@@ -9,6 +9,10 @@ local REPL_CMDS = { python = "ipython", r = "R", bash = "bash" }
 -- be, since every idle shell pane would match.
 local REPL_PROCESSES = { python = "ipython", r = "R" }
 local FILETYPES = { "quarto", "markdown", "python", "r", "sh", "bash", "zsh" }
+-- Plain scripts: code is the whole buffer, split into cells by "# %%" lines.
+local SCRIPT_FILETYPES = { "python", "r", "sh", "bash", "zsh" }
+-- A search pattern: matches both "# %%" and "#%%" at the start of a line.
+local CELL_DELIMITER = [[^\s*#\s*%%]]
 
 local panes = {}
 
@@ -178,6 +182,52 @@ function M.list()
 	vim.notify(table.concat(lines, "\n"))
 end
 
+-- Leave visual mode, so that '<, '> and gv refer to the current selection.
+local function leave_visual()
+	if vim.fn.mode():match("^[vV\22]") then
+		vim.cmd.normal({ vim.keycode("<Esc>"), bang = true })
+	end
+end
+
+--- Send the visual selection to the REPL.
+function M.send_selection()
+	M.update()
+	leave_visual()
+	vim.fn["slime#send_op"](vim.fn.visualmode(), 1)
+end
+
+-- What quarto's runner functions do in a plain script, which has no code chunks.
+local script_runners = {
+	run_cell = function()
+		vim.fn["slime#send_cell"]()
+	end,
+	run_above = function()
+		local next_cell = vim.fn.search(CELL_DELIMITER, "nW")
+		vim.fn["slime#send_range"](1, next_cell > 0 and next_cell - 1 or vim.fn.line("$"))
+	end,
+	run_below = function()
+		vim.fn["slime#send_range"](math.max(vim.fn.search(CELL_DELIMITER, "bcnW"), 1), vim.fn.line("$"))
+	end,
+	run_all = function()
+		vim.fn["slime#send_range"](1, vim.fn.line("$"))
+	end,
+	run_line = function()
+		vim.fn["slime#send_lines"](1)
+	end,
+	run_range = M.send_selection,
+}
+
+--- Run code with the given quarto runner function, or its equivalent in plain scripts.
+function M.run(fn)
+	M.update()
+	leave_visual()
+	if vim.tbl_contains(SCRIPT_FILETYPES, vim.bo.filetype) then
+		script_runners[fn]()
+	else
+		require("quarto.runner")[fn]()
+	end
+end
+
 function M.setup()
 	vim.g.slime_target = backend() or "herdr"
 	vim.g.slime_default_config = default_config()
@@ -218,9 +268,8 @@ function M.setup()
 		pattern = FILETYPES,
 		callback = function(ev)
 			vim.b[ev.buf].slime_config = default_config()
-			if vim.tbl_contains({ "python", "sh", "bash", "zsh" }, vim.bo[ev.buf].filetype) then
-				-- A search pattern: matches both "# %%" and "#%%" at the start of a line.
-				vim.b[ev.buf].slime_cell_delimiter = [[^\s*#\s*%%]]
+			if vim.tbl_contains(SCRIPT_FILETYPES, vim.bo[ev.buf].filetype) then
+				vim.b[ev.buf].slime_cell_delimiter = CELL_DELIMITER
 			end
 		end,
 	})
@@ -243,12 +292,7 @@ function M.setup()
 		M.update()
 		vim.fn["slime#send_cell"]()
 	end, { desc = "Send cell to REPL" })
-	map("x", "<C-c><C-c>", function()
-		M.update()
-		-- Leave visual mode first, so send_op reselects this selection with gv.
-		vim.cmd.normal({ vim.keycode("<Esc>"), bang = true })
-		vim.fn["slime#send_op"](vim.fn.visualmode(), 1)
-	end, { desc = "Send selection to REPL" })
+	map("x", "<C-c><C-c>", M.send_selection, { desc = "Send selection to REPL" })
 end
 
 return M

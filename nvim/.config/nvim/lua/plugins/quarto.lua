@@ -38,8 +38,7 @@ require("utils.repl").setup()
 local map = vim.keymap.set
 local function run(fn)
 	return function()
-		require("utils.repl").update()
-		require("quarto.runner")[fn]()
+		require("utils.repl").run(fn)
 	end
 end
 
