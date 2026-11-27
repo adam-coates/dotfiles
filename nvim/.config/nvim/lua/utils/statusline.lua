@@ -344,8 +344,14 @@ function M.setup()
 	api.nvim_create_autocmd("ColorScheme", { group = group, callback = set_highlights })
 	api.nvim_create_autocmd({ "DiagnosticChanged", "ModeChanged", "RecordingEnter", "RecordingLeave" }, {
 		group = group,
+		-- After the change, not during it: a plugin running :normal from Insert mode
+		-- (the Snacks preview centring a match) passes through Normal mode, and a
+		-- redraw then pulls the cursor back from the end of the line, so the picker
+		-- typed "dictation" as "dctationi".
 		callback = function()
-			vim.cmd("redrawstatus")
+			vim.schedule(function()
+				vim.cmd("redrawstatus")
+			end)
 		end,
 	})
 	api.nvim_create_autocmd({ "FocusGained", "DirChanged" }, {
