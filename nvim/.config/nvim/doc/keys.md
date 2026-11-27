@@ -50,6 +50,7 @@ To wrap text in a snippet: select it, `Ctrl-s`, type the trigger (`b`, `quote`, 
 | `Space`    | find or create a note           | `/`        | search all text                |
 | `,`        | open notes                      | `.`        | context panel                  |
 | `?`        | this                            | `u`        | undo history                   |
+| `h`        | dashboard                       |            |                                |
 | `ee` `ef`  | explorer, on this file          | `Z`        | zen mode                       |
 | `ec` `er`  | collapse, refresh the explorer  | `s`        | replace word under the cursor  |
 
