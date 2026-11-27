@@ -39,6 +39,10 @@ select i.itemID as id, i.key as key, t.typeName as type,
   (select group_concat(name, '; ') from (select trim(coalesce(c.firstName,'') || ' ' || c.lastName) as name
      from itemCreators ic join creators c on c.creatorID = ic.creatorID
      where ic.itemID = i.itemID order by ic.orderIndex)) as authors,
+  (select group_concat(lastName, '; ') from (select c.lastName as lastName
+     from itemCreators ic join creators c on c.creatorID = ic.creatorID
+     join creatorTypes ct on ct.creatorTypeID = ic.creatorTypeID
+     where ic.itemID = i.itemID and ct.creatorType = 'author' order by ic.orderIndex)) as lastnames,
   (select group_concat(tg.name, '; ') from itemTags it join tags tg on tg.tagID = it.tagID where it.itemID = i.itemID) as tags
 from items i
 join itemTypes t on t.itemTypeID = i.itemTypeID
@@ -72,6 +76,7 @@ function M.items()
 			abstract = text(row.abstract),
 			citekey = text(row.citekey),
 			authors = vim.split(text(row.authors), "; ", { trimempty = true }),
+			lastnames = vim.split(text(row.lastnames), "; ", { trimempty = true }),
 			tags = vim.split(text(row.tags), "; ", { trimempty = true }),
 		}
 	end, rows)
@@ -151,9 +156,36 @@ function M.render(item)
 	return text
 end
 
+--- "Author et al. (Year) Title", the way the literature notes are named: two
+--- authors as "A & B", ": " and "? " as " - ", and past 120 characters without
+--- the subtitle (or cut at a word).
+function M.note_name(item)
+	local a = #(item.lastnames or {}) > 0 and item.lastnames or vim.tbl_map(surname, item.authors)
+	local who = #a == 0 and "Unknown" or #a == 1 and a[1] or #a == 2 and (a[1] .. " & " .. a[2]) or (a[1] .. " et al.")
+	local year = item.year ~= "" and item.year or "n.d."
+	local title = item.title:gsub("[:?]%s+", " - "):gsub('[%*"\\/<>|%?#%^%[%]]', ""):gsub("%s+", " ")
+	title = vim.trim(title):gsub("%.+$", "")
+	local name = ("%s (%s) %s"):format(who, year, title)
+	if vim.fn.strchars(name) > 120 and title:find(" - ", 1, true) then
+		name = ("%s (%s) %s"):format(who, year, title:match("^(.-) %- "))
+	end
+	if vim.fn.strchars(name) > 120 then
+		local cut = vim.fn.strcharpart(name, 0, 120)
+		name = (cut:match("^(.*) ") or cut):gsub("[,;%- ]+$", "")
+	end
+	return name
+end
+
+--- The paper's literature note: the one with its citekey, or where a new one goes.
 function M.path(item)
-	local name = item.citekey ~= "" and item.citekey or M.short(item) .. " " .. item.title:sub(1, 40)
-	return vault.folder("literature") .. "/" .. util.filename(name) .. ".md"
+	if item.citekey ~= "" then
+		for _, entry in ipairs(require("notes.index").all()) do
+			if entry.fm and entry.fm.citekey == item.citekey then
+				return entry.path
+			end
+		end
+	end
+	return vault.folder("literature") .. "/" .. util.filename(M.note_name(item)) .. ".md"
 end
 
 function M.pick()
