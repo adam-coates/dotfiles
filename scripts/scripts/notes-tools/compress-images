@@ -1,0 +1,244 @@
+#!/usr/bin/env python3
+"""Shrink large images in the notes vault, in place, to keep it small.
+
+Each image over MIN_SIZE is resized to at most MAX_DIM px and re-encoded (JPEG for
+photos, optimised PNG for screenshots and anything transparent). When a photo
+changes format (photo.png -> photo.jpg), every link to it in the notes is updated.
+Originals are kept in BACKUPS. Images in notes still tagged "ocr" are skipped so the
+OCR gets the full-resolution photo.
+
+When the vault is a git repository it pulls first and commits and pushes afterwards.
+Git keeps the originals in its history, so this keeps the notes folder and new
+commits small rather than the repository's history.
+
+Needs ImageMagick (libheif for iPhone photos).
+Usage: compress-images [--dry-run] [--no-git] [--vault PATH]
+       (default vault: $NOTES_VAULT or ~/notes; --dry-run only reports what it would save)
+"""
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.parse
+from pathlib import Path
+
+DATA = Path.home() / ".local/share/compress-notes-images"
+BACKUPS = DATA / "backups"
+CHECKED = DATA / "checked.json"  # path -> [size, mtime], so unchanged images aren't redone
+COMPRESSIBLE = {".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"}
+MIN_SIZE = 300_000    # bytes; smaller images are left alone
+MAX_DIM = 2000        # px on the long side
+JPEG_QUALITY = 85
+MIN_SAVING = 0.25     # only replace an image if this fraction of its size is saved
+
+LINK = re.compile(r"!\[\[(?P<wiki>[^\]|#]+)(?:[|#][^\]]*)?\]\]"
+                  r"|!?\[[^\]]*\]\((?P<md><[^>]+>|[^)\s]+)(?:\s+\"[^\"]*\")?\)"
+                  r"|<img[^>]*\bsrc=\"(?P<img>[^\"]+)\"[^>]*>")
+FRONTMATTER = re.compile(r"\A---\n(.*?\n)---[ \t]*\n", re.S)
+OCR_TAG = re.compile(r"^tags:.*(?:\n[ \t]+-.*)*", re.M)
+
+
+def log(msg: str) -> None:
+    print(f"{time.strftime('%H:%M:%S')} {msg}", flush=True)
+
+
+def mb(n: int) -> str:
+    return f"{n / 1e6:.1f} MB"
+
+
+# --- the vault ---------------------------------------------------------------
+
+class Vault:
+    def __init__(self, root: Path):
+        self.root = root
+        self.by_name: dict[str, list[Path]] = {}
+        self.files: list[Path] = []
+        for d, dirs, files in os.walk(root):
+            dirs[:] = [x for x in dirs if not x.startswith(".")]
+            for f in files:
+                p = Path(d, f)
+                self.files.append(p)
+                self.by_name.setdefault(f.lower(), []).append(p)
+
+    def notes(self):
+        return [p for p in self.files if p.suffix == ".md"]
+
+    def resolve(self, note: Path, target: str) -> Path | None:
+        target = urllib.parse.unquote(target.strip().strip("<>"))
+        if re.match(r"^[a-z][\w+.-]*://", target):
+            return None
+        for base in (note.parent, self.root):
+            p = (base / target).resolve()
+            if p.is_file():
+                return p
+        hits = self.by_name.get(Path(target).name.lower(), [])
+        return hits[0].resolve() if hits else None
+
+    def links(self, note: Path, text: str):
+        """(match, group, file) for every link in a note that points to a file."""
+        for m in LINK.finditer(text):
+            group = "wiki" if m.group("wiki") else "md" if m.group("md") else "img"
+            file = self.resolve(note, m.group(group))
+            if file:
+                yield m, group, file
+
+
+def ocr_pending(text: str) -> bool:
+    fm = FRONTMATTER.match(text)
+    if fm:
+        tags = OCR_TAG.search(fm.group(1))
+        if tags and re.search(r"(?<![\w-])#?ocr(?![\w-])", tags.group(0)):
+            return True
+    return bool(re.search(r"(?<![\w/#-])#ocr(?![\w/-])", text[fm.end():] if fm else text))
+
+
+# --- compression -------------------------------------------------------------
+
+def magick(*args: str) -> str:
+    return subprocess.run(["magick", *args], check=True, capture_output=True, text=True).stdout
+
+
+def compress(path: Path) -> tuple[bytes, str] | None:
+    """Return (smaller image, extension), or None if it isn't worth replacing."""
+    data = path.read_bytes()
+    is_png = path.suffix.lower() == ".png"
+    with tempfile.TemporaryDirectory() as tmp:
+        first = f"{path}[0]"
+        resize = ["-auto-orient", "-resize", f"{MAX_DIM}x{MAX_DIM}>", "-strip"]
+        candidates = []
+        if not is_png or magick(first, "-format", "%[opaque]", "info:").strip().lower() == "true":
+            jpg = Path(tmp, "out.jpg")
+            magick(first, *resize, "-quality", str(JPEG_QUALITY), str(jpg))
+            candidates.append((jpg.read_bytes(), "jpg"))
+        if is_png:
+            png = Path(tmp, "out.png")
+            magick(first, *resize, "-define", "png:compression-level=9", str(png))
+            png_data = png.read_bytes()
+            # screenshots and diagrams stay PNG unless JPEG is dramatically smaller (i.e. it's a photo)
+            if not candidates or len(candidates[0][0]) > len(png_data) / 2:
+                candidates = [(png_data, "png")]
+        best = min(candidates, key=lambda c: len(c[0]))
+        return best if len(best[0]) <= len(data) * (1 - MIN_SAVING) else None
+
+
+def relink(vault: Vault, old: Path, new: Path, dry_run: bool) -> int:
+    """Point every link to `old` at `new` (same name, new extension). Returns notes changed."""
+    changed = 0
+    for note in vault.notes():
+        text = note.read_text(encoding="utf-8", errors="replace")
+        if old.name.lower().rsplit(".", 1)[0] not in urllib.parse.unquote(text).lower():
+            continue
+        out, last = [], 0
+        for m, group, file in vault.links(note, text):
+            if file != old.resolve():
+                continue
+            start, end = m.span(group)
+            target = text[start:end]
+            out += [text[last:start], re.sub(r"\.[A-Za-z0-9]+(>?)$", "." + new.suffix[1:] + r"\1", target)]
+            last = end
+        if out:
+            changed += 1
+            if not dry_run:
+                note.write_text("".join(out) + text[last:], encoding="utf-8")
+    return changed
+
+
+# --- git -----------------------------------------------------------------------
+
+def git(root: Path, *args: str) -> subprocess.CompletedProcess:
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_SSH_COMMAND="ssh -oBatchMode=yes -oConnectTimeout=8")
+    return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, env=env)
+
+
+def synced(root: Path) -> bool:
+    return git(root, "rev-parse", "--abbrev-ref", "@{u}").returncode == 0
+
+
+# --- main ------------------------------------------------------------------------
+
+def main() -> int:
+    args = sys.argv[1:]
+    dry_run, use_git = "--dry-run" in args, "--no-git" not in args and "--dry-run" not in args
+    root = Path(args[args.index("--vault") + 1] if "--vault" in args
+                else os.environ.get("NOTES_VAULT") or Path.home() / "notes").expanduser().resolve()
+    if not root.is_dir():
+        log(f"no vault at {root}")
+        return 1
+    if use_git and synced(root):
+        if git(root, "pull", "--rebase", "--autostash", "-q").returncode != 0:
+            git(root, "rebase", "--abort")
+            log("couldn't pull (offline, or a conflict); working on what is here")
+
+    vault = Vault(root)
+    checked = json.loads(CHECKED.read_text()) if CHECKED.exists() else {}
+
+    def stamp(p: Path) -> list:
+        st = p.stat()
+        return [st.st_size, st.st_mtime_ns]
+
+    todo = [p for p in vault.files
+            if p.suffix.lower() in COMPRESSIBLE and p.stat().st_size > MIN_SIZE and checked.get(str(p)) != stamp(p)]
+    if not todo:
+        log("no new large images")
+        return 0
+
+    waiting = set()  # photos in notes still waiting for OCR
+    for note in vault.notes():
+        text = note.read_text(encoding="utf-8", errors="replace")
+        if ocr_pending(text):
+            waiting |= {file for _, _, file in vault.links(note, text)}
+
+    before = after = failed = done = 0
+    for path in todo:
+        rel = path.relative_to(root)
+        if path.resolve() in waiting:
+            log(f"{rel}: waiting for OCR, skipping")
+            continue
+        try:
+            size = path.stat().st_size
+            result = compress(path)
+            if result is None:
+                log(f"{rel}: {mb(size)}, already compact")
+            else:
+                small, ext = result
+                target = path if path.suffix.lower().lstrip(".") in (ext, "jpeg" if ext == "jpg" else ext) else path.with_suffix("." + ext)
+                if target != path and target.exists():
+                    log(f"{rel}: {target.name} already exists, skipping")
+                    continue
+                before, after, done = before + size, after + len(small), done + 1
+                notes = relink(vault, path, target, dry_run) if target != path else 0
+                log(f"{rel}: {mb(size)} -> {mb(len(small))} {ext.upper()}" + (f", {notes} note(s) relinked" if notes else ""))
+                if not dry_run:
+                    backup = BACKUPS / rel
+                    if not backup.exists():  # keep the true original if an image gets redone
+                        backup.parent.mkdir(parents=True, exist_ok=True)
+                        backup.write_bytes(path.read_bytes())
+                    target.write_bytes(small)
+                    if target != path:
+                        path.unlink()
+                    path = target
+            if not dry_run:
+                checked[str(path)] = stamp(path)
+        except Exception as e:  # keep going with the other images
+            failed += 1
+            log(f"{rel}: failed: {e}")
+
+    if not dry_run:
+        DATA.mkdir(parents=True, exist_ok=True)
+        CHECKED.write_text(json.dumps(checked))
+    if before:
+        log(f"{'would save' if dry_run else 'saved'} {mb(before - after)} ({mb(before)} -> {mb(after)})")
+    if done and use_git and git(root, "rev-parse", "--is-inside-work-tree").returncode == 0:
+        git(root, "add", "-A")
+        if git(root, "diff", "--cached", "--quiet").returncode != 0:
+            git(root, "commit", "-q", "-m", f"compress {done} image{'s' if done != 1 else ''}")
+        if synced(root) and git(root, "push", "-q").returncode != 0:
+            log("couldn't push; Neovim's next sync will")
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

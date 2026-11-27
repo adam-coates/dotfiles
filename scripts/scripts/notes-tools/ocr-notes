@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
-# One-stop handwriting OCR for Joplin.
+# One-stop handwriting OCR for the notes in ~/notes.
 #
-# Tag a Joplin note "ocr" (on any device) with photos of handwritten pages attached,
-# then run this. It:
+# Tag a note "ocr" (in Neovim or Obsidian, on any device) with photos of handwritten
+# pages in it, then run this. It:
 #   1. installs anything missing (python, curl, ImageMagick + HEIC support, Ollama, the model)
-#   2. opens Joplin desktop if it isn't running and gives it time to sync
-#   3. starts Ollama for the run and stops it again afterwards
-#   4. transcribes every note tagged "ocr" and retags it "ocr-done"
+#   2. starts Ollama for the run and stops it again afterwards
+#   3. pulls the vault, transcribes every note tagged "ocr", retags it "ocr-done",
+#      and commits and pushes the result
 #
-# Usage: ocr-joplin [--dry-run]     (--dry-run prints the result without changing notes)
+# Usage: ocr-notes [--dry-run] [--no-git] [--vault PATH]
+#        (--dry-run prints the result without changing notes)
 set -euo pipefail
 
 DIR="$(dirname "$(readlink -f "$0")")"
 export OCR_MODEL="qwen2.5vl:7b"
 OLLAMA_URL="http://127.0.0.1:11434"
-JOPLIN_URL="http://127.0.0.1:41184"
-JOPLIN_SYNC_WAIT=30  # seconds to let a freshly opened Joplin sync before looking for notes
 
 say()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 die()  { printf '\033[1;31m==>\033[0m %s\n' "$*" >&2; exit 1; }
@@ -50,23 +49,7 @@ check_dependencies() {
     || die "ImageMagick can't read HEIC photos; install libheif and rerun"
 }
 
-# --- 2. Joplin --------------------------------------------------------------
-
-joplin_up() { curl -sf "$JOPLIN_URL/ping" &>/dev/null; }
-
-ensure_joplin() {
-  joplin_up && return
-  command -v joplin &>/dev/null || die "Joplin desktop isn't installed"
-  if ! pgrep -x joplin &>/dev/null; then
-    say "Opening Joplin and giving it ${JOPLIN_SYNC_WAIT}s to sync"
-    setsid joplin &>/dev/null &
-  fi
-  for _ in $(seq 60); do joplin_up && break; sleep 1; done
-  joplin_up || die "Joplin is open but its API isn't answering. Turn on Tools → Options → Web Clipper → Enable Web Clipper Service, then rerun"
-  sleep "$JOPLIN_SYNC_WAIT"
-}
-
-# --- 3. Ollama + model ------------------------------------------------------
+# --- 2. Ollama + model ------------------------------------------------------
 
 ollama_up() { curl -sf "$OLLAMA_URL/api/version" &>/dev/null; }
 
@@ -84,9 +67,8 @@ ensure_ollama() {
   fi
 }
 
-# --- 4. run -----------------------------------------------------------------
+# --- 3. run -----------------------------------------------------------------
 
 check_dependencies
-ensure_joplin
 ensure_ollama
-python3 -I "$DIR/ocr_to_joplin.py" "$@"
+python3 -I "$DIR/ocr_notes.py" "$@"

@@ -16,6 +16,8 @@ source "$OMARCHY_PATH/default/bash/rc"
 # Notes in ~/notes: a new note in the inbox, and filing the inbox by location
 alias on=~/scripts/on
 alias sort_inbox=~/scripts/sort_inbox.sh
+alias ocr-notes=~/scripts/notes-tools/ocr-notes
+alias compress-images=~/scripts/notes-tools/compress-images
 command -v direnv &>/dev/null && eval "$(direnv hook bash)"
 
 [[ -r "$HOME/.local/share/../bin/env" ]] && . "$HOME/.local/share/../bin/env"

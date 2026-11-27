@@ -45,7 +45,7 @@ local function actions()
 	return section
 end
 
---- The vault's most recently edited notes, where your previous config listed Joplin's.
+--- The vault's most recently edited notes.
 local function recent_notes(limit)
 	local title = { title = "Recent notes", icon = "󰎚 ", padding = 1 }
 	local list = { indent = 2, padding = 1 }
