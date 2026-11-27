@@ -99,7 +99,7 @@ local function tags_yaml(text)
 			tags[#tags + 1] = tag
 		end
 	end
-	return #tags > 0 and ("[" .. table.concat(tags, ", ") .. "]") or ""
+	return util.yaml_tags(tags) -- a YAML list, like the rest of the notes
 end
 
 --- A new note: title, location, tags. Made in its folder from the note template.

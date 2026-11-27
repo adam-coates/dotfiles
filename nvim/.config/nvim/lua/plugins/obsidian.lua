@@ -55,8 +55,11 @@ substitutions.location = function(ctx)
 	return rel and rel:match("^(.*)/[^/]+$") or ""
 end
 substitutions.tags = function(ctx)
-	local tags = ctx and ctx.partial_note and ctx.partial_note.tags or {}
-	return #tags > 0 and ("[" .. table.concat(tags, ", ") .. "]") or ""
+	return require("notes.util").yaml_tags(ctx and ctx.partial_note and ctx.partial_note.tags or {})
+end
+substitutions.title_yaml = function(ctx)
+	local note = ctx and ctx.partial_note
+	return require("notes.util").yaml_scalar(note and (note.title or note.id) or "")
 end
 
 -- Until obsidian.nvim has picked a vault, the first one's settings.

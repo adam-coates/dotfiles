@@ -182,6 +182,7 @@ function M.create(path, opts)
 		-- {{location}} is the folder it goes in, {{tags}} empty unless given.
 		local location = M.rel(vim.fs.dirname(vim.fs.normalize(path))) or ""
 		local vars = vim.tbl_extend("keep", opts.vars or {}, { title = title, location = location, tags = "" })
+		vars.title_yaml = vars.title_yaml or util.yaml_scalar(vars.title)
 		local text = require("notes.template").render(opts.template, vars)
 		util.write(path, text)
 		require("notes.index").update(path)

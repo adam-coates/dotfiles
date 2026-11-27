@@ -174,6 +174,26 @@ function M.input(opts, fn)
 end
 
 --- A name that is safe as a file name on every system and in wiki links.
+--- A value for YAML properties, quoted when it needs to be ("Attention: the claustrum").
+function M.yaml_scalar(value)
+	local s = tostring(value or "")
+	local special = s == "" or s:find(": ", 1, true) or s:find(" #", 1, true) or s:match("^[%s%-?:,%[%]{}#&*!|>'\"%%@`]") or s:match("%s$")
+	local word = ({ yes = true, no = true, ["true"] = true, ["false"] = true, null = true, ["~"] = true })[s:lower()]
+	if special or word then
+		return '"' .. (s:gsub("\\", "\\\\"):gsub('"', '\\"')) .. '"'
+	end
+	return s
+end
+
+--- Tags as the lines of a YAML list ("\n  - a\n  - b"), for "tags:{{tags}}".
+function M.yaml_tags(tags)
+	local out = {}
+	for _, tag in ipairs(tags) do
+		out[#out + 1] = "\n  - " .. M.yaml_scalar(tag)
+	end
+	return table.concat(out)
+end
+
 function M.filename(title)
 	local name = title:gsub('[\\/:*?"<>|#^%[%]]', " "):gsub("%s+", " ")
 	name = vim.trim(name):gsub("%.+$", "")
