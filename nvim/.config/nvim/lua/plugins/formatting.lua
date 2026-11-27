@@ -1,4 +1,10 @@
+-- Formatting: your previous config's formatters, on save. Markdown is the exception:
+-- notes save themselves whenever you pause, so prettier runs on them only when
+-- you ask (<leader>mp), not mid-sentence.
+
 local conform = require("conform")
+
+local ON_REQUEST = { markdown = true }
 
 conform.setup({
 	formatters_by_ft = {
@@ -20,10 +26,12 @@ conform.setup({
 		-- Code chunks, each with its own language's formatters (python: isort, black).
 		quarto = { "injected" },
 	},
-	format_on_save = {
-		lsp_format = "fallback",
-		timeout_ms = 3000,
-	},
+	format_on_save = function(buf)
+		if ON_REQUEST[vim.bo[buf].filetype] then
+			return nil
+		end
+		return { lsp_format = "fallback", timeout_ms = 3000 }
+	end,
 })
 
 -- isort 9 leaves the imports alone when --filename names a file that doesn't

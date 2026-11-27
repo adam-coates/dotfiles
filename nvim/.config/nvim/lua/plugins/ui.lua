@@ -1,104 +1,204 @@
--- Snacks.zen knows nothing about herdr, so zoom the pane here.
-local function herdr_zoom(enable)
-	if vim.env.HERDR_ENV ~= "1" then
-		return
-	end
-	vim.fn.system({ "herdr", "pane", "zoom", "--current", enable and "--on" or "--off" })
-end
+local settings = require("settings")
 
--- A dashboard section that's just a line across a column (Snacks' default
--- width is 60), with `padding` blank lines below it.
-local function separator(padding)
-	return { text = { { string.rep("─", 60), hl = "NonText" } }, padding = padding }
-end
+-- Icons, surround and text objects -----------------------------------------------
+require("mini.icons").setup()
+MiniIcons.mock_nvim_web_devicons()
 
--- Snacks' default dashboard actions, drawn with the key right after the name
--- (Snacks puts keys at the far right of the column). Restore Session and Lazy
--- are left out: there's no session plugin, and lazy.nvim isn't used.
-local function actions()
-	local items = {
-		{ " ", "Find File", "f", ":lua Snacks.dashboard.pick('files')" },
-		{ " ", "New File", "n", ":ene | startinsert" },
-		{ " ", "Find Text", "g", ":lua Snacks.dashboard.pick('live_grep')" },
-		{ " ", "Recent Files", "r", ":lua Snacks.dashboard.pick('oldfiles')" },
-		{ " ", "Config", "c", ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
-		{ " ", "Quit", "q", ":qa" },
-	}
-	local width = 0
-	for _, a in ipairs(items) do
-		width = math.max(width, vim.fn.strdisplaywidth(a[2]))
-	end
-	local section = { gap = 1, padding = 1, align = "center" }
-	for _, a in ipairs(items) do
-		section[#section + 1] = {
-			key = a[3],
-			action = a[4],
-			text = {
-				{ a[1], hl = "icon" },
-				{ a[2] .. string.rep(" ", width - vim.fn.strdisplaywidth(a[2]) + 2), hl = "desc" },
-				{ a[3], hl = "key" },
+require("mini.ai").setup({
+	n_lines = 200,
+	custom_textobjects = {
+		-- ic / ac: a fenced code block; i* a*: emphasis
+		c = { "\n```[^\n]*\n().-()\n```" },
+		["*"] = { "%*+()[^%*]+()%*+" },
+	},
+})
+
+-- sa / sd / sr, with markdown's markers: saiwb makes a word bold, saiwl a link.
+local function buffer_surround()
+	vim.b.minisurround_config = {
+		custom_surroundings = {
+			b = { input = { "%*%*().-()%*%*" }, output = { left = "**", right = "**" } },
+			i = { input = { "%*().-()%*" }, output = { left = "*", right = "*" } },
+			["="] = { input = { "==().-()==" }, output = { left = "==", right = "==" } },
+			["~"] = { input = { "~~().-()~~" }, output = { left = "~~", right = "~~" } },
+			c = { input = { "`().-()`" }, output = { left = "`", right = "`" } },
+			w = { input = { "%[%[().-()%]%]" }, output = { left = "[[", right = "]]" } },
+			l = {
+				input = { "%[().-()%]%(.-%)" },
+				output = function()
+					local url = vim.fn.getreg("+"):match("^%s*(%a+://%S+)%s*$")
+					return { left = "[", right = "](" .. (url or "") .. ")" }
+				end,
 			},
-		}
-	end
-	return section
+		},
+	}
 end
+require("mini.surround").setup({ n_lines = 60 })
+vim.api.nvim_create_autocmd("FileType", {
+	group = vim.api.nvim_create_augroup("notes_surround", { clear = true }),
+	pattern = { "markdown", "quarto" },
+	callback = buffer_surround,
+})
 
+-- Snacks ---------------------------------------------------------------------------
 require("snacks").setup({
+	bigfile = { enabled = true },
+	input = { enabled = true },
+	notifier = { enabled = true, timeout = 3500, style = "compact" },
 	indent = { enabled = true },
 	scroll = { enabled = false },
-	picker = {
-		enabled = true,
-		sources = {
-			files = { hidden = true },
-			grep = { hidden = true },
-			explorer = {
-				hidden = true,
-				ignored = true, -- show gitignored files, as nvim-tree did
-				exclude = { ".DS_Store" },
-				layout = { layout = { width = 50 } },
-			},
-		},
-	},
-	explorer = { enabled = true },
-	-- Start screen: Snacks' default actions on the left; Joplin notes and recent
-	-- files on the right (stacked below on narrow windows). Snacks' "startup"
-	-- section needs lazy.nvim, so it's left out.
-	dashboard = {
-		enabled = true,
-		sections = {
-			actions(),
-			function()
-				return require("utils.joplin").dashboard({ pane = 2, limit = 3 })
-			end,
-			vim.tbl_extend("force", separator(0), { pane = 2 }),
-			{ pane = 2, icon = " ", title = "Recent Files", padding = 1 }, -- own item, so it gets a gap below
-			{ pane = 2, section = "recent_files", limit = 3, indent = 2, padding = 1 },
-		},
-	},
-	notifier = { enabled = true },
 	statuscolumn = { enabled = true },
-	words = { enabled = true },
-	zen = {
-		win = {
-			wo = {
-				signcolumn = "no",
-				number = false,
-				relativenumber = false,
-				statuscolumn = "",
-			},
-		},
-		on_open = function()
-			herdr_zoom(true)
-		end,
-		on_close = function()
-			herdr_zoom(false)
-		end,
-	},
+	words = { enabled = true }, -- highlights other uses of the symbol under the cursor
 	lazygit = {
 		enabled = true,
 		configure = true, -- auto-sets nvim-remote preset & syncs theme
 		theme = {
 			activeBorderColor = { fg = "WarningMsg", bold = true },
 		},
+	},
+	image = {
+		enabled = settings.images ~= false,
+		force = settings.images == true,
+		doc = {
+			inline = true,
+			float = true,
+			max_width = 72,
+			max_height = 24,
+			conceal = function(_, kind)
+				return kind == "math" -- keep ![[image]] and mermaid source visible
+			end,
+		},
+		math = {
+			enabled = true,
+			latex = { font_size = "normalsize" },
+		},
+		-- ![[name.png]] anywhere in the vault (obsidian.nvim only looks in the
+		-- attachments folder). A canvas is drawn from a copy named after its version.
+		resolve = function(path, src)
+			local vault = require("notes.vault")
+			if src:match("^%a[%w+.-]*://") or not vault.is_note(path) then
+				return nil
+			end
+			local index = require("notes.index")
+			local rel = index.resolve_file((src:gsub("%%20", " ")), index.get(path))
+			local file = rel and vault.abs(rel)
+			if not file then
+				local ok, api = pcall(require, "obsidian.api")
+				file = ok and tostring(api.resolve_attachment_path(src)) or nil
+			end
+			return file and require("notes.canvas").image_path(file) or file
+		end,
+		convert = { notify = false },
+	},
+	picker = {
+		enabled = true,
+		ui_select = true,
+		layout = function()
+			return vim.o.columns >= 130 and "default" or "vertical"
+		end,
+		formatters = { file = { filename_first = true, truncate = 80 } },
+		win = {
+			input = {
+				keys = {
+					["<C-x>"] = { "edit_split", mode = { "i", "n" } },
+					["<C-v>"] = { "edit_vsplit", mode = { "i", "n" } },
+				},
+			},
+		},
+		sources = {
+			files = { hidden = true },
+			grep = { hidden = true },
+			explorer = {
+				hidden = true,
+				ignored = true, -- show gitignored files, as nvim-tree did
+				layout = { layout = { width = 50, position = "left" } },
+				exclude = { ".DS_Store", ".obsidian", ".trash" },
+				win = { list = { keys = { ["<C-c>"] = false } } },
+			},
+			select = { layout = { preset = "select" } },
+		},
+	},
+	explorer = { enabled = true, replace_netrw = true },
+	dashboard = require("config.dashboard").startup(),
+	zen = {
+		toggles = { dim = false, git_signs = false },
+		show = { statusline = false, tabline = false },
+		win = {
+			style = "zen",
+			width = settings.readable_width,
+			backdrop = { transparent = false, blend = 95 },
+			wo = { signcolumn = "no", number = false, relativenumber = false, statuscolumn = "", foldcolumn = "0" },
+		},
+		on_open = function()
+			if vim.env.HERDR_ENV == "1" then
+				vim.system({ "herdr", "pane", "zoom", "--current", "--on" })
+			end
+		end,
+		on_close = function()
+			if vim.env.HERDR_ENV == "1" then
+				vim.system({ "herdr", "pane", "zoom", "--current", "--off" })
+			end
+		end,
+	},
+	styles = {
+		notification = { wo = { wrap = true } },
+		input = { relative = "editor", row = math.floor(vim.o.lines * 0.3), width = 70 },
+		zen = { relative = "editor" },
+	},
+})
+
+vim.print = function(...)
+	return Snacks.debug.inspect(...)
+end
+
+-- Keys ----------------------------------------------------------------------------
+local wk = require("which-key")
+wk.setup({
+	preset = "classic",
+	delay = 350,
+	icons = { mappings = true, rules = false },
+	show_help = false,
+	win = { border = "rounded", title = true },
+	spec = {
+		{ "<leader>n", group = "note", icon = "󰎞" },
+		{ "<leader>d", group = "daily & calendar (debug in code)", icon = "󰃭" },
+		{ "<leader>l", group = "links (LSP in code) / LazyGit", icon = "󰌷" },
+		{ "<leader>f", group = "find", icon = "󰍉" },
+		{ "<leader>t", group = "tasks", icon = "󰄲" },
+		{ "<leader>p", group = "panels", icon = "󰕰" },
+		{ "<leader>P", group = "print", icon = "󰐪", mode = { "n", "x" } },
+		{ "<leader>i", group = "insert / images", icon = "󰐕", mode = { "n", "x" } },
+		{ "<leader>k", group = "flashcards", icon = "󰘸" },
+		{ "<leader>c", group = "code / REPL", icon = "", mode = { "n", "x" } },
+		{ "<leader>ci", group = "start REPL" },
+		{ "<leader>e", group = "explorer", icon = "󰙅" },
+		{ "<leader>m", group = "make pretty", icon = "󰉼", mode = { "n", "x" } },
+		{ "<leader>o", group = "Word", icon = "󰈙" },
+		{ "<leader>q", group = "quarto", icon = "󰠮" },
+		{ "<leader>v", group = "view & toggles", icon = "󰈈" },
+		{ "<leader>g", group = "git & sync", icon = "󰊢" },
+		{ "<leader>x", group = "export & preview", icon = "󰈇" },
+		{ "<leader>r", group = "refactor", icon = "󰑕", mode = { "n", "x" } },
+		{ "<leader>s", group = "split / spelling / replace", icon = "󰤼" },
+		{ "<leader>w", group = "vault", icon = "󰢬" },
+		{ "<leader>z", group = "zotero", icon = "󰂺" },
+		{ "<localleader>r", group = "run code", mode = { "n", "x" } },
+		{ "z", group = "folding" },
+		{ "<localleader>m", group = "format", mode = { "n", "x" } },
+		{ "<localleader>mQ", group = "callout", mode = { "n", "x" } },
+		{ "<localleader>mf", group = "footnote" },
+		{ "<localleader>h", group = "heading" },
+		{ "<localleader>l", group = "list", mode = { "n", "x" } },
+		{ "<localleader>lt", group = "list type", mode = { "n", "x" } },
+		{ "<localleader>t", group = "table" },
+		{ "<localleader>ti", group = "table insert" },
+		{ "<localleader>td", group = "table delete" },
+		{ "<localleader>ty", group = "table duplicate" },
+		{ "<localleader>ts", group = "table sort" },
+		{ "<localleader>tv", group = "table csv" },
+		{ "[", group = "previous" },
+		{ "]", group = "next" },
+		{ "g", group = "go to" },
+		{ "s", group = "surround", mode = { "n", "x" } },
 	},
 })

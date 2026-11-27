@@ -1,0 +1,4 @@
+{
+  "name": "notes-snippets",
+  "contributes": { "snippets": [{ "language": ["markdown", "quarto"], "path": "./markdown.json" }] }
+}

@@ -1,56 +1,66 @@
+-- Language servers, linters, formatters and debuggers: your previous config's set,
+-- plus Harper (grammar) and Tectonic (LaTeX maths drawn as images) for notes.
+-- Mason installs them into this config's own data folder.
+
+local settings = require("settings")
+
 require("mason").setup({
 	ui = {
-		icons = {
-			package_installed = "✓",
-			package_pending = "➜",
-			package_uninstalled = "✗",
-		},
+		border = "rounded",
+		icons = { package_installed = "✓", package_pending = "➜", package_uninstalled = "✗" },
 	},
 })
 
+local tools = {
+	-- Language servers
+	"lua-language-server",
+	"zls",
+	"typescript-language-server",
+	"rust-analyzer",
+	"bash-language-server",
+	"pyright",
+	"css-lsp",
+	"html-lsp",
+	"json-lsp",
+	"yaml-language-server",
+	"ltex-ls-plus",
+	"tinymist",
+	"harper-ls",
+	-- Linters
+	"eslint_d",
+	"luacheck",
+	"shellcheck",
+	"markdownlint",
+	"yamllint",
+	"jsonlint",
+	"htmlhint",
+	"stylelint",
+	"phpstan",
+	"ruff",
+	"mypy",
+	-- Formatters
+	"stylua",
+	"prettier",
+	"black",
+	"isort",
+	"shfmt",
+	-- Debuggers
+	"debugpy",
+}
+if settings.images ~= false then
+	tools[#tools + 1] = "tectonic" -- LaTeX maths as images
+end
+
 require("mason-tool-installer").setup({
-	ensure_installed = {
-		-- Language servers
-		"lua-language-server",
-		"zls",
-		"typescript-language-server",
-		"rust-analyzer",
-		"bash-language-server",
-		"pyright",
-		"css-lsp",
-		"html-lsp",
-		"json-lsp",
-		"yaml-language-server",
-		"ltex-ls-plus",
-		"tinymist",
-		-- Linters
-		"eslint_d",
-		"luacheck",
-		"shellcheck",
-		"markdownlint",
-		"yamllint",
-		"jsonlint",
-		"htmlhint",
-		"stylelint",
-		"phpstan",
-		"ruff",
-		"mypy",
-		-- Formatters
-		"stylua",
-		"prettier",
-		"black",
-		"isort",
-		"shfmt",
-		-- Debuggers
-		"debugpy",
-	},
+	ensure_installed = tools,
 	auto_update = false,
 	run_on_start = true,
+	start_delay = 1500, -- after the first screen is drawn
 })
 
 require("lazydev").setup({})
 
--- Server configs ------------------------------------------------------------
+-- Server configs ------------------------------------------------------------------
 local capabilities = {
 	workspace = {
 		fileOperations = {
@@ -84,6 +94,7 @@ vim.lsp.config("lua_ls", {
 	},
 })
 
+-- Grammar, twice over (you chose both): LTeX+ as in your previous config, and Harper.
 vim.lsp.config("ltex_plus", {
 	settings = {
 		ltex = {
@@ -104,7 +115,32 @@ vim.lsp.config("ltex_plus", {
 	},
 })
 
-vim.lsp.enable({
+vim.lsp.config("harper_ls", {
+	cmd = { "harper-ls", "--stdio" },
+	filetypes = { "markdown", "quarto", "gitcommit", "typst" },
+	root_markers = { ".obsidian", ".git" },
+	settings = {
+		["harper-ls"] = {
+			dialect = settings.grammar_dialect,
+			userDictPath = vim.fn.stdpath("config") .. "/spell/harper.txt",
+			linters = {
+				SpellCheck = false, -- Vim's own spell checker does that
+				SentenceCapitalization = false,
+				UseTitleCase = false,
+				LongSentences = false,
+				Dashes = false,
+				ToDoHyphen = false,
+				ExpandTimeShorthands = false,
+				ExpandMinimum = false,
+			},
+			markdown = { IgnoreLinkTitle = true },
+			isolateEnglish = true, -- leave notes in other languages alone
+			diagnosticSeverity = "hint",
+		},
+	},
+})
+
+local servers = {
 	"lua_ls",
 	"zls",
 	"ts_ls",
@@ -115,11 +151,25 @@ vim.lsp.enable({
 	"html",
 	"jsonls",
 	"yamlls",
-	"ltex_plus",
 	"tinymist",
+}
+if settings.grammar then
+	vim.list_extend(servers, { "ltex_plus", "harper_ls" })
+end
+vim.lsp.enable(servers)
+
+-- Servers mason installs after the first start attach to the open buffers then.
+vim.api.nvim_create_autocmd("User", {
+	pattern = "MasonToolsUpdateCompleted",
+	group = vim.api.nvim_create_augroup("config_mason_done", { clear = true }),
+	callback = vim.schedule_wrap(function(ev)
+		if type(ev.data) == "table" and #ev.data > 0 then
+			vim.lsp.enable(servers)
+		end
+	end),
 })
 
--- Keymaps ---------------------------------------------------------------------
+-- Keys ----------------------------------------------------------------------------
 -- Snacks' LSP pickers fail on otter's answers in quarto and markdown code chunks
 -- ("callback yielded after done"), so use Neovim's own functions there.
 local function goto(picker, native)
@@ -133,19 +183,28 @@ local function goto(picker, native)
 	end
 end
 
+-- Buffers where K previews links and <leader>l means links (config/keymaps.lua).
+local function markdown(buf)
+	local ft = vim.bo[buf].filetype
+	return ft == "markdown" or ft == "quarto"
+end
+
 local function setup_keymaps(bufnr)
 	local function map(mode, lhs, rhs, desc, opts)
 		opts = vim.tbl_extend("force", { buffer = bufnr, desc = desc, silent = true }, opts or {})
 		vim.keymap.set(mode, lhs, rhs, opts)
 	end
 
-	-- Hover & signature
-	map("n", "K", vim.lsp.buf.hover, "Hover")
+	-- Hover & signature. In notes K previews the link, and falls back to this in code blocks.
+	if not markdown(bufnr) then
+		map("n", "K", vim.lsp.buf.hover, "Hover")
+	end
 	-- Insert mode only: in normal mode <C-k> moves to the window or pane above.
 	map("i", "<C-k>", vim.lsp.buf.signature_help, "Signature Help")
 
 	-- Go to, through the Snacks picker. nowait: Neovim's default gr* maps would
-	-- otherwise make gr pause for timeoutlen.
+	-- otherwise make gr pause for timeoutlen. In notes gd follows the link and gr
+	-- lists the backlinks (obsidian.nvim's language server).
 	map("n", "gd", goto("lsp_definitions", vim.lsp.buf.definition), "Go to Definition")
 	map("n", "gD", goto("lsp_declarations", vim.lsp.buf.declaration), "Go to Declaration")
 	map("n", "gr", goto("lsp_references", vim.lsp.buf.references), "References", { nowait = true })
@@ -166,9 +225,11 @@ local function setup_keymaps(bufnr)
 	map("n", "<leader>cd", vim.diagnostic.open_float, "Line Diagnostic")
 	map("n", "<leader>cv", "<cmd>vsplit | lua vim.lsp.buf.definition()<cr>", "Definition in Vsplit")
 
-	-- <leader>l = LSP
+	-- <leader>l = LSP in code; in notes <leader>l is links, and <leader>lr removes one.
 	map("n", "<leader>li", "<cmd>checkhealth vim.lsp<cr>", "LSP Info")
-	map("n", "<leader>lr", "<cmd>lsp restart<cr>", "LSP Restart")
+	if not markdown(bufnr) then
+		map("n", "<leader>lr", "<cmd>lsp restart<cr>", "LSP Restart")
+	end
 	map("n", "<leader>lh", function()
 		vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
 	end, "Toggle Inlay Hints")
@@ -182,23 +243,36 @@ vim.api.nvim_create_autocmd("LspAttach", {
 	end,
 })
 
--- Diagnostics -----------------------------------------------------------------
+-- Diagnostics -----------------------------------------------------------------------
+-- In prose, grammar hints are only underlined (gl or K reads them); warnings and
+-- errors, like those from code blocks, show as in code.
+local PROSE = { markdown = true, quarto = true, text = true, gitcommit = true }
+local function prose(bufnr)
+	return PROSE[vim.bo[bufnr].filetype] == true
+end
+local serious = { min = vim.diagnostic.severity.WARN }
+local signs = {
+	text = {
+		[vim.diagnostic.severity.ERROR] = "󰅚 ",
+		[vim.diagnostic.severity.WARN] = "󰀪 ",
+		[vim.diagnostic.severity.INFO] = "󰋽 ",
+		[vim.diagnostic.severity.HINT] = "󰌶 ",
+	},
+	numhl = {
+		[vim.diagnostic.severity.ERROR] = "ErrorMsg",
+		[vim.diagnostic.severity.WARN] = "WarningMsg",
+	},
+}
+
 vim.diagnostic.config({
-	virtual_text = true,
+	virtual_text = function(_, bufnr)
+		return prose(bufnr) and { severity = serious } or true
+	end,
+	signs = function(_, bufnr)
+		return prose(bufnr) and vim.tbl_extend("force", signs, { severity = serious }) or signs
+	end,
 	underline = true,
 	update_in_insert = false,
 	severity_sort = true,
 	float = { border = "rounded", source = true, header = "", prefix = "" },
-	signs = {
-		text = {
-			[vim.diagnostic.severity.ERROR] = "󰅚 ",
-			[vim.diagnostic.severity.WARN] = "󰀪 ",
-			[vim.diagnostic.severity.INFO] = "󰋽 ",
-			[vim.diagnostic.severity.HINT] = "󰌶 ",
-		},
-		numhl = {
-			[vim.diagnostic.severity.ERROR] = "ErrorMsg",
-			[vim.diagnostic.severity.WARN] = "WarningMsg",
-		},
-	},
 })

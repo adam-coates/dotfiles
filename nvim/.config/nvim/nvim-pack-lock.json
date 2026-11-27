@@ -14,6 +14,10 @@
       "rev": "bfb04bd50b69d863469b2deb9fb361cf0d945ba7",
       "src": "https://github.com/ficcdaf/ashen.nvim"
     },
+    "blink-emoji.nvim": {
+      "rev": "dff709139ad5389fb55ebab026e75278a12b325a",
+      "src": "https://github.com/moyiz/blink-emoji.nvim"
+    },
     "blink.cmp": {
       "rev": "78336bc89ee5365633bcf754d93df01678b5c08f",
       "src": "https://github.com/saghen/blink.cmp",
@@ -36,13 +40,17 @@
       "src": "https://github.com/kepano/flexoki-neovim"
     },
     "friendly-snippets": {
-      "rev": "b2ea5c41a150ba72fb656eedb4ed0a86d138d945",
+      "rev": "7a1c9f7897a4eb078b157a04c7af81e5869215b1",
       "src": "https://github.com/rafamadriz/friendly-snippets"
     },
     "gitsigns.nvim": {
       "rev": "a462f416e2ce4744531c6256252dee99a7d34a83",
       "src": "https://github.com/lewis6991/gitsigns.nvim",
       "version": "2.0.0 - 3.0.0"
+    },
+    "grug-far.nvim": {
+      "rev": "91b7e58b6ffc6ddad5acb7a7c1df21257724449e",
+      "src": "https://github.com/MagicDuck/grug-far.nvim"
     },
     "gruvbox-material": {
       "rev": "11d779b26a9ab2b3db8c22c6ac9fb6e8ed4fea79",
@@ -72,6 +80,11 @@
       "rev": "f8ce95213e57b379089da23abc36a1fc39936b63",
       "src": "https://github.com/omacom-io/lumon.nvim"
     },
+    "markdown-plus.nvim": {
+      "rev": "52f6af120a6409a5b8860cb0db01e835483d00d6",
+      "src": "https://github.com/YousefHadder/markdown-plus.nvim",
+      "version": "2.0.0 - 3.0.0"
+    },
     "markdown-preview.nvim": {
       "rev": "84c376a52b0e0fc79e471e6c414371f0ed14e597",
       "src": "https://github.com/adam-coates/markdown-preview.nvim"
@@ -91,6 +104,10 @@
     "mini.icons": {
       "rev": "eab3e692d796d78ea6ffc978d8a380ff26fcf4e3",
       "src": "https://github.com/nvim-mini/mini.icons"
+    },
+    "mini.nvim": {
+      "rev": "24cf4ad5840f0d092e3d8296b17eaf7026bf27f3",
+      "src": "https://github.com/nvim-mini/mini.nvim"
     },
     "nightfox.nvim": {
       "rev": "4dacd3f0185a2227bdf3b6c0975a8f0bf87cac9a",
@@ -113,7 +130,7 @@
       "src": "https://github.com/theHamsta/nvim-dap-virtual-text"
     },
     "nvim-lspconfig": {
-      "rev": "993d048db0d83d8e8ba3f9cb376456321acdcce3",
+      "rev": "76f4cafc49677a34dc8ad8142b773d78ab4a041e",
       "src": "https://github.com/neovim/nvim-lspconfig"
     },
     "nvim-nio": {
@@ -121,12 +138,17 @@
       "src": "https://github.com/nvim-neotest/nvim-nio"
     },
     "nvim-treesitter": {
-      "rev": "915f2bd3d4e2a33704bfc476b5137e9befa82f3d",
+      "rev": "52773f0d13a0c11d0c3ef33c14ab6ecc1c17148b",
       "src": "https://github.com/nvim-treesitter/nvim-treesitter"
     },
     "nvim-ts-autotag": {
       "rev": "d7220b55e16ed3c04e88086256def5d282429493",
       "src": "https://github.com/windwp/nvim-ts-autotag"
+    },
+    "obsidian.nvim": {
+      "rev": "15af492b64f4677959fe95008f1d5b782fe1f86a",
+      "src": "https://github.com/obsidian-nvim/obsidian.nvim",
+      "version": "3.0.0 - 4.0.0"
     },
     "otter.nvim": {
       "rev": "6f05811621460eca983bf2cd877e63c59a40720e",
@@ -141,8 +163,9 @@
       "src": "https://github.com/quarto-dev/quarto-nvim"
     },
     "render-markdown.nvim": {
-      "rev": "eef01965fd23156bab6d8f7d678d1161a7f621e6",
-      "src": "https://github.com/MeanderingProgrammer/render-markdown.nvim"
+      "rev": "640a3ec6d538bad17c328be373c7cad0293d9589",
+      "src": "https://github.com/MeanderingProgrammer/render-markdown.nvim",
+      "version": "8.0.0 - 9.0.0"
     },
     "retro-82.nvim": {
       "rev": "41b8c42ed0099eb43824903ef606a6b051d33505",

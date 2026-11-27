@@ -57,6 +57,7 @@ local ORDER = {
 	"mod",
 	"ro",
 	"sep",
+	"notes",
 	"diag",
 	"fileinfo",
 	"pad",
@@ -111,6 +112,15 @@ local function path_widget(root, fname)
 
 	if bo.buftype == "help" then
 		return ICON.file .. path
+	end
+
+	-- A note: where it is in the vault, without the extension.
+	local vault = require("notes.vault")
+	local rel = vault.is_note(fname) and vault.rel(fname)
+	if rel then
+		local folder = rel:match("^(.*)/[^/]+$")
+		local crumbs = "󰢬 " .. vault.name() .. " › " .. (folder and (folder:gsub("/", " › ") .. " › ") or "")
+		return ICON.file .. " " .. tools.hl_str("Comment", (crumbs:gsub("%%", "%%%%"))) .. path:gsub("%.md$", "") .. " "
 	end
 
 	local dir_path = fn.fnamemodify(fname, ":h") .. "/"
@@ -248,6 +258,36 @@ local function scrollbar_widget()
 	return string.rep(sbar_chars[i], 2)
 end
 
+-- notes: backlinks of this note, tasks due anywhere, vault sync, macro recording --
+local function notes_widget(fname)
+	local out = {}
+	local rec = fn.reg_recording()
+	if rec ~= "" then
+		out[#out + 1] = tools.hl_str("DiagnosticError", "󰑋 @" .. rec)
+	end
+	local vault = require("notes.vault")
+	local rel = vault.is_note(fname) and vault.rel(fname)
+	if rel then
+		local index = require("notes.index")
+		local entry = index.entries[rel]
+		if entry then
+			out[#out + 1] = tools.hl_str("Comment", "󰌹 " .. #index.backlinks(entry))
+		end
+	end
+	local ok, overdue, due = pcall(function()
+		return require("notes.agenda").counts()
+	end)
+	if ok and overdue + due > 0 then
+		local n = overdue > 0 and due > 0 and (overdue .. "+" .. due) or tostring(overdue + due)
+		out[#out + 1] = tools.hl_str(overdue > 0 and "NotesOverdue" or "NotesToday", "󰄱 " .. n)
+	end
+	local sync = require("notes.sync").line()
+	if sync ~= "" then
+		out[#out + 1] = tools.hl_str("Comment", (sync:gsub("%%", "%%%%")))
+	end
+	return #out > 0 and (table.concat(out, "  ") .. " ") or ""
+end
+
 -- render ---------------------------------------------
 function M.render()
 	local fname = api.nvim_buf_get_name(0)
@@ -267,6 +307,7 @@ function M.render()
 			or ICON.nomodifiable,
 		ro = get_opt("readonly", { buf = buf }) and ICON.readonly or "",
 		sep = SEP,
+		notes = notes_widget(api.nvim_buf_get_name(0)),
 		diag = diagnostics_widget(),
 		fileinfo = fileinfo_widget(),
 		scrollbar = scrollbar_widget(),
@@ -301,7 +342,7 @@ function M.setup()
 
 	local group = api.nvim_create_augroup("UserStatusline", { clear = true })
 	api.nvim_create_autocmd("ColorScheme", { group = group, callback = set_highlights })
-	api.nvim_create_autocmd({ "DiagnosticChanged", "ModeChanged" }, {
+	api.nvim_create_autocmd({ "DiagnosticChanged", "ModeChanged", "RecordingEnter", "RecordingLeave" }, {
 		group = group,
 		callback = function()
 			vim.cmd("redrawstatus")

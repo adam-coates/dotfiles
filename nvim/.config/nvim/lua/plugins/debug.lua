@@ -36,13 +36,27 @@ dap.listeners.after.event_initialized["dapui_config"] = function()
 	dapui.open()
 end
 
-local map = function(lhs, rhs, desc)
-	vim.keymap.set("n", lhs, rhs, { silent = true, desc = desc })
+-- <leader>d is daily notes everywhere else, so these keys are only set in files
+-- that can be debugged (python, through dap-python). There they take over
+-- <leader>dc (calendar: <leader>pc) and <leader>do (on this day).
+local function debug_keys(buf)
+	local map = function(lhs, rhs, desc)
+		vim.keymap.set("n", lhs, rhs, { buffer = buf, silent = true, desc = desc })
+	end
+	map("<leader>db", dap.toggle_breakpoint, "Toggle Breakpoint")
+	map("<leader>dc", dap.continue, "Start/Continue Debugging")
+	map("<leader>do", dap.step_over, "Step Over")
+	map("<leader>di", dap.step_into, "Step Into")
+	map("<leader>dO", dap.step_out, "Step Out")
+	map("<leader>dq", dap.terminate, "Quit Debugging")
+	map("<leader>du", dapui.toggle, "Toggle DAP UI")
 end
-map("<leader>db", dap.toggle_breakpoint, "Toggle Breakpoint")
-map("<leader>dc", dap.continue, "Start/Continue Debugging")
-map("<leader>do", dap.step_over, "Step Over")
-map("<leader>di", dap.step_into, "Step Into")
-map("<leader>dO", dap.step_out, "Step Out")
-map("<leader>dq", dap.terminate, "Quit Debugging")
-map("<leader>du", dapui.toggle, "Toggle DAP UI")
+
+vim.api.nvim_create_autocmd("FileType", {
+	group = vim.api.nvim_create_augroup("UserDebugKeys", { clear = true }),
+	callback = function(ev)
+		if dap.configurations[ev.match] and vim.bo[ev.buf].buftype == "" then
+			debug_keys(ev.buf)
+		end
+	end,
+})

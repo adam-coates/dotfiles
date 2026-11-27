@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graph</title>
+<style>
+  :root { --bg:#282828; --fg:#d4be98; --muted:#928374; --accent:#e1875c; --line:rgba(212,190,152,.14); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--fg); font: 13px/1.45 ui-sans-serif, system-ui, "Inter", sans-serif; }
+  canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; cursor: grab; }
+  canvas.over { cursor: pointer; }
+  canvas.drag { cursor: grabbing; }
+  aside { position: fixed; top: 14px; left: 14px; width: 220px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(6px); }
+  aside.shut > :not(header) { display: none; }
+  aside.shut { width: auto; }
+  header { display: flex; align-items: baseline; gap: 8px; cursor: pointer; user-select: none; }
+  header b { color: var(--accent); font-weight: 600; }
+  header span { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  input[type=search] { width: 100%; margin: 10px 0 8px; padding: 6px 8px; font: inherit; color: inherit; background: transparent; border: 1px solid var(--line); border-radius: 5px; outline: none; }
+  input[type=search]:focus { border-color: var(--accent); }
+  label { display: flex; align-items: center; gap: 7px; padding: 2px 0; cursor: pointer; }
+  label input[type=checkbox] { accent-color: var(--accent); margin: 0; }
+  label.range { justify-content: space-between; }
+  label.range input { width: 108px; accent-color: var(--accent); }
+  #legend { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); max-height: 30vh; overflow: auto; }
+  #legend div { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; cursor: pointer; padding: 1px 0; }
+  #legend div.off { opacity: .35; }
+  #legend i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  #legend em { margin-left: auto; font-style: normal; font-variant-numeric: tabular-nums; }
+  #tip { position: fixed; bottom: 14px; left: 14px; color: var(--muted); font-size: 12px; max-width: 60vw; pointer-events: none; }
+  #tip b { color: var(--fg); font-weight: 600; }
+  #lost { position: fixed; top: 14px; right: 14px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); background: var(--bg); display: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<aside id="panel">
+  <header id="head"><b id="vault">Graph</b><span id="stats"></span></header>
+  <input id="q" type="search" placeholder="Find a note…  ( / )" spellcheck="false">
+  <label><input type="checkbox" id="local"> Local graph</label>
+  <label class="range">Depth <input type="range" id="depth" min="1" max="5" value="2"></label>
+  <label><input type="checkbox" id="tags"> Tags</label>
+  <label><input type="checkbox" id="missing" checked> Missing notes</label>
+  <label><input type="checkbox" id="files"> Attachments</label>
+  <label><input type="checkbox" id="orphans" checked> Orphans</label>
+  <label class="range">Spread <input type="range" id="spread" min="20" max="200" value="70"></label>
+  <div id="legend"></div>
+</aside>
+<div id="tip"></div>
+<div id="lost">Neovim is closed</div>
+<script>
+"use strict";
+const TOKEN = "__TOKEN__";
+const $ = id => document.getElementById(id);
+const canvas = $("c"), ctx = canvas.getContext("2d");
+const api = (path, args = {}) => path + "?" + new URLSearchParams({ t: TOKEN, ...args });
+
+let data = { nodes: [], links: [], colors: {} };
+let nodes = [], links = [], byId = new Map(), near = new Map();
+let current = null, hover = null, dragging = null, found = null;
+let view = { x: 0, y: 0, k: 1 }, alpha = 1, fitted = false, moved = false;
+let hidden = new Set();
+const positions = new Map();
+
+try { // per-browser conveniences only
+  const saved = JSON.parse(localStorage.getItem("notes-graph") || "{}");
+  for (const id of ["tags", "missing", "files", "orphans"]) if (id in saved) $(id).checked = saved[id];
+  for (const id of ["depth", "spread"]) if (id in saved) $(id).value = saved[id];
+} catch (e) {}
+if (new URLSearchParams(location.search).get("local")) $("local").checked = true;
+function remember() {
+  try {
+    const out = {};
+    for (const id of ["tags", "missing", "files", "orphans"]) out[id] = $(id).checked;
+    for (const id of ["depth", "spread"]) out[id] = +$(id).value;
+    localStorage.setItem("notes-graph", JSON.stringify(out));
+  } catch (e) {}
+}
+
+// ---- data -------------------------------------------------------------------
+async function load() {
+  const res = await fetch(api("/data"));
+  data = await res.json();
+  current = data.current || current;
+  const c = data.colors, root = document.documentElement.style;
+  root.setProperty("--bg", c.bg); root.setProperty("--fg", c.fg);
+  root.setProperty("--muted", c.muted); root.setProperty("--accent", c.accent);
+  root.setProperty("--line", c.fg + "24");
+  $("vault").textContent = data.vault;
+  document.title = data.vault + " — graph";
+  rebuild();
+}
+
+const folderOf = n => n.kind === "note" ? (n.folder.split("/")[0] || "/") : n.kind;
+let palette = new Map();
+function colour(n) {
+  const c = data.colors;
+  if (n.kind === "tag") return c.magenta;
+  if (n.kind === "missing") return c.muted;
+  if (n.kind === "file") return c.cyan;
+  return palette.get(folderOf(n)) || c.fg;
+}
+
+function rebuild() {
+  const c = data.colors;
+  // Colours go to folders by name, so they don't change with the filters.
+  const folders = [...new Set(data.nodes.filter(n => n.kind === "note").map(folderOf))].sort();
+  const wheel = [c.blue, c.green, c.yellow, c.orange, c.magenta, c.cyan, c.red, c.fg];
+  palette = new Map(folders.map((f, i) => [f, wheel[i % wheel.length]]));
+
+  let keep = data.nodes.filter(n =>
+    (n.kind !== "tag" || $("tags").checked) &&
+    (n.kind !== "missing" || $("missing").checked) &&
+    (n.kind !== "file" || $("files").checked) &&
+    !(n.kind === "note" && hidden.has(folderOf(n))));
+  let ids = new Set(keep.map(n => n.id));
+  let ls = data.links.filter(l => ids.has(l.s) && ids.has(l.t));
+
+  if ($("local").checked && current && ids.has(current)) {
+    const adj = new Map();
+    for (const l of ls) {
+      (adj.get(l.s) || adj.set(l.s, []).get(l.s)).push(l.t);
+      (adj.get(l.t) || adj.set(l.t, []).get(l.t)).push(l.s);
+    }
+    let ring = [current]; const reach = new Set(ring);
+    for (let d = 0; d < +$("depth").value; d++) {
+      const next = [];
+      for (const id of ring) for (const o of adj.get(id) || []) if (!reach.has(o)) { reach.add(o); next.push(o); }
+      ring = next;
+    }
+    keep = keep.filter(n => reach.has(n.id)); ids = reach;
+    ls = ls.filter(l => ids.has(l.s) && ids.has(l.t));
+  }
+  if (!$("orphans").checked && !$("local").checked) {
+    const linked = new Set(ls.flatMap(l => [l.s, l.t]));
+    keep = keep.filter(n => linked.has(n.id));
+  }
+
+  byId = new Map();
+  nodes = keep.map((n, i) => {
+    const old = positions.get(n.id);
+    const a = i * 2.39996, r = 14 * Math.sqrt(i + 1);
+    const o = Object.assign({}, n, { x: old ? old.x : Math.cos(a) * r, y: old ? old.y : Math.sin(a) * r, vx: 0, vy: 0, deg: 0 });
+    byId.set(o.id, o); return o;
+  });
+  links = ls.map(l => ({ s: byId.get(l.s), t: byId.get(l.t), kind: l.kind }));
+  near = new Map(nodes.map(n => [n, new Set()]));
+  for (const l of links) { l.s.deg++; l.t.deg++; near.get(l.s).add(l.t); near.get(l.t).add(l.s); }
+  for (const n of nodes) n.r = (n.kind === "note" ? 4 : 3) + Math.min(9, Math.sqrt(n.deg) * 1.7);
+
+  $("stats").textContent = nodes.filter(n => n.kind === "note").length + " notes, " + links.length + " links";
+  legend();
+  search();
+  alpha = 1;
+  // Settle out of sight, so the graph doesn't explode on screen.
+  for (let i = 0; i < 140; i++) tick();
+  if (!fitted) { fit(); fitted = true; }
+}
+
+function legend() {
+  const counts = new Map();
+  for (const n of data.nodes) if (n.kind === "note") counts.set(folderOf(n), (counts.get(folderOf(n)) || 0) + 1);
+  const box = $("legend"); box.textContent = "";
+  for (const [f, n] of [...counts].sort((a, b) => b[1] - a[1])) {
+    const row = document.createElement("div");
+    const dot = document.createElement("i"); dot.style.background = palette.get(f);
+    const count = document.createElement("em"); count.textContent = n;
+    row.append(dot, f, count);
+    if (hidden.has(f)) row.className = "off";
+    row.onclick = () => { hidden.has(f) ? hidden.delete(f) : hidden.add(f); rebuild(); };
+    box.append(row);
+  }
+}
+
+// ---- forces -----------------------------------------------------------------
+// Repulsion with a quadtree (Barnes-Hut), springs along links, a pull to the middle.
+function quad(list) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const n of list) { x0 = Math.min(x0, n.x); y0 = Math.min(y0, n.y); x1 = Math.max(x1, n.x); y1 = Math.max(y1, n.y); }
+  const size = Math.max(x1 - x0, y1 - y0, 1);
+  const root = { x: x0, y: y0, size, mass: 0, cx: 0, cy: 0, kids: null, node: null };
+  for (const n of list) insert(root, n, 0);
+  return root;
+}
+function insert(q, n, depth) {
+  q.cx = (q.cx * q.mass + n.x) / (q.mass + 1); q.cy = (q.cy * q.mass + n.y) / (q.mass + 1); q.mass++;
+  if (q.mass === 1) { q.node = n; return; }
+  if (depth > 24) return;
+  if (!q.kids) { q.kids = [null, null, null, null]; const o = q.node; q.node = null; if (o) place(q, o, depth); }
+  place(q, n, depth);
+}
+function place(q, n, depth) {
+  const h = q.size / 2, ix = n.x >= q.x + h ? 1 : 0, iy = n.y >= q.y + h ? 1 : 0, i = iy * 2 + ix;
+  if (!q.kids[i]) q.kids[i] = { x: q.x + ix * h, y: q.y + iy * h, size: h, mass: 0, cx: 0, cy: 0, kids: null, node: null };
+  insert(q.kids[i], n, depth + 1);
+}
+function repel(q, n, strength) {
+  if (!q || q.mass === 0 || q.node === n) return;
+  let dx = n.x - q.cx, dy = n.y - q.cy, d2 = dx * dx + dy * dy;
+  if (d2 < 1) { dx = (Math.random() - .5); dy = (Math.random() - .5); d2 = 1; }
+  if (!q.kids || q.size * q.size / d2 < .7) {
+    const f = strength * q.mass / d2;
+    n.vx += dx * f; n.vy += dy * f; return;
+  }
+  for (const k of q.kids) if (k) repel(k, n, strength);
+}
+function tick() {
+  if (alpha < .004 || !nodes.length) return;
+  const spread = +$("spread").value, root = quad(nodes);
+  for (const n of nodes) {
+    repel(root, n, spread * .62 * alpha);
+    const pull = n.deg ? .012 : .028;
+    n.vx -= n.x * pull * alpha; n.vy -= n.y * pull * alpha;
+  }
+  // Springs, weaker for well-linked notes, and the busier end moves less (as in
+  // d3-force). Full strength on both ends made notes with many links overshoot
+  // and fling the graph apart.
+  for (const l of links) {
+    const dx = l.t.x - l.s.x, dy = l.t.y - l.s.y, d = Math.hypot(dx, dy) || 1;
+    const rest = spread * (l.kind === "tag" ? 1.1 : .8);
+    const f = (d - rest) / d * .8 * alpha / Math.min(l.s.deg, l.t.deg);
+    const b = l.s.deg / (l.s.deg + l.t.deg);
+    l.s.vx += dx * f * (1 - b); l.s.vy += dy * f * (1 - b);
+    l.t.vx -= dx * f * b; l.t.vy -= dy * f * b;
+  }
+  for (const n of nodes) {
+    if (n === dragging) { n.vx = n.vy = 0; continue; }
+    n.vx *= .58; n.vy *= .58;
+    const v = Math.hypot(n.vx, n.vy);
+    if (v > 60) { n.vx *= 60 / v; n.vy *= 60 / v; } // never a jump across the graph
+    n.x += n.vx; n.y += n.vy;
+    positions.set(n.id, n);
+  }
+  alpha *= .985;
+}
+
+// ---- drawing ----------------------------------------------------------------
+function resize() {
+  const r = devicePixelRatio || 1;
+  canvas.width = innerWidth * r; canvas.height = innerHeight * r;
+}
+function fit(list) {
+  list = list || nodes;
+  if (!list.length) return;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const n of list) { x0 = Math.min(x0, n.x); y0 = Math.min(y0, n.y); x1 = Math.max(x1, n.x); y1 = Math.max(y1, n.y); }
+  const left = innerWidth > 760 ? 250 : 20;
+  const w = Math.max(x1 - x0, 60), h = Math.max(y1 - y0, 60);
+  view.k = Math.min(2.2, Math.min((innerWidth - left - 80) / w, (innerHeight - 120) / h));
+  view.x = left + (innerWidth - left) / 2 - (x0 + x1) / 2 * view.k;
+  view.y = innerHeight / 2 - (y0 + y1) / 2 * view.k;
+}
+function lit(n) {
+  if (hover) return n === hover || near.get(hover)?.has(n);
+  if (found) return found.has(n);
+  return true;
+}
+function draw() {
+  const r = devicePixelRatio || 1, c = data.colors;
+  ctx.setTransform(r, 0, 0, r, 0, 0);
+  ctx.clearRect(0, 0, innerWidth, innerHeight);
+  ctx.translate(view.x, view.y); ctx.scale(view.k, view.k);
+  const focus = hover || found;
+  for (const l of links) {
+    const on = hover ? (l.s === hover || l.t === hover) : (lit(l.s) && lit(l.t));
+    ctx.strokeStyle = on && hover ? c.accent : c.fg;
+    ctx.globalAlpha = on ? (hover ? .75 : .2) : .05;
+    ctx.lineWidth = (on && hover ? 1.4 : .8) / Math.sqrt(view.k);
+    if (l.kind === "missing") ctx.setLineDash([3, 3]); else ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(l.s.x, l.s.y); ctx.lineTo(l.t.x, l.t.y); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  for (const n of nodes) {
+    ctx.globalAlpha = lit(n) ? 1 : .16;
+    ctx.fillStyle = colour(n);
+    ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, 7);
+    if (n.kind === "missing") { ctx.lineWidth = 1.2; ctx.strokeStyle = c.muted; ctx.stroke(); }
+    else ctx.fill();
+    if (n.id === current) {
+      ctx.globalAlpha = 1; ctx.lineWidth = 2; ctx.strokeStyle = c.accent;
+      ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 4, 0, 7); ctx.stroke();
+    }
+  }
+  // Labels: constant size on screen, the more connected notes first.
+  const size = 11.5 / view.k;
+  ctx.font = size + "px ui-sans-serif, system-ui, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  const taken = [];
+  const order = [...nodes].sort((a, b) => (b.id === current) - (a.id === current) || (b === hover) - (a === hover) || b.deg - a.deg);
+  for (const n of order) {
+    const strong = n === hover || n.id === current || (focus && lit(n));
+    if (!strong && (focus || n.deg * view.k * view.k < 1.1 && nodes.length > 60)) continue;
+    const text = n.name.length > 34 ? n.name.slice(0, 33) + "…" : n.name;
+    const w = ctx.measureText(text).width, box = [n.x - w / 2, n.y + n.r + 2 / view.k, w, size * 1.25];
+    if (!strong && taken.some(b => box[0] < b[0] + b[2] && b[0] < box[0] + box[2] && box[1] < b[1] + b[3] && b[1] < box[1] + box[3])) continue;
+    taken.push(box);
+    ctx.globalAlpha = strong ? 1 : .72;
+    ctx.lineWidth = 3 / view.k; ctx.strokeStyle = c.bg; ctx.lineJoin = "round";
+    ctx.strokeText(text, n.x, box[1]);
+    ctx.fillStyle = n === hover || n.id === current ? c.accent : c.fg;
+    ctx.fillText(text, n.x, box[1]);
+  }
+  ctx.globalAlpha = 1;
+}
+function frame() { tick(); draw(); requestAnimationFrame(frame); }
+
+// ---- input ------------------------------------------------------------------
+const world = e => ({ x: (e.clientX - view.x) / view.k, y: (e.clientY - view.y) / view.k });
+function at(e) {
+  const p = world(e); let best = null, bd = Infinity;
+  for (const n of nodes) {
+    const d = Math.hypot(n.x - p.x, n.y - p.y);
+    if (d < n.r + 5 / view.k && d < bd) { best = n; bd = d; }
+  }
+  return best;
+}
+let pan = null;
+canvas.addEventListener("pointerdown", e => {
+  canvas.setPointerCapture(e.pointerId); moved = false;
+  dragging = at(e);
+  if (!dragging) pan = { x: e.clientX - view.x, y: e.clientY - view.y };
+  canvas.className = "drag";
+});
+canvas.addEventListener("pointermove", e => {
+  if (dragging) { const p = world(e); dragging.x = p.x; dragging.y = p.y; alpha = Math.max(alpha, .25); moved = true; return; }
+  if (pan) { view.x = e.clientX - pan.x; view.y = e.clientY - pan.y; moved = true; return; }
+  const n = at(e);
+  if (n !== hover) {
+    hover = n; canvas.className = n ? "over" : "";
+    const tip = $("tip"); tip.textContent = "";
+    if (n) {
+      const b = document.createElement("b"); b.textContent = n.name; tip.append(b);
+      tip.append("  " + [n.folder, n.words ? n.words + " words" : "", n.deg + " links", (n.tags || []).map(t => "#" + t).join(" ")].filter(Boolean).join(" · "));
+    }
+  }
+});
+canvas.addEventListener("pointerup", e => {
+  const n = dragging; dragging = null; pan = null; canvas.className = hover ? "over" : "";
+  if (n && !moved && n.kind === "note") { current = n.id; fetch(api("/open", { id: n.id })); if ($("local").checked) rebuild(); }
+  else if (n && !moved && n.kind === "tag") { $("q").value = n.name; search(); }
+});
+canvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  const k = Math.min(6, Math.max(.08, view.k * Math.exp(-e.deltaY * .0014)));
+  view.x = e.clientX - (e.clientX - view.x) * k / view.k;
+  view.y = e.clientY - (e.clientY - view.y) * k / view.k;
+  view.k = k;
+}, { passive: false });
+canvas.addEventListener("dblclick", e => { if (!at(e)) fit(); });
+
+function search() {
+  const q = $("q").value.trim().toLowerCase();
+  if (!q) { found = null; return; }
+  found = new Set(nodes.filter(n => n.name.toLowerCase().includes(q) ||
+    (q[0] === "#" && (n.tags || []).some(t => ("#" + t.toLowerCase()).startsWith(q)))));
+}
+$("q").addEventListener("input", search);
+$("q").addEventListener("keydown", e => {
+  if (e.key === "Enter" && found && found.size) fit([...found]);
+  if (e.key === "Escape") { $("q").value = ""; search(); $("q").blur(); }
+});
+for (const id of ["local", "tags", "missing", "files", "orphans"]) $(id).addEventListener("change", () => { remember(); fitted = fitted && id !== "local"; rebuild(); });
+$("depth").addEventListener("input", () => { remember(); if ($("local").checked) rebuild(); });
+$("spread").addEventListener("input", () => { remember(); alpha = 1; });
+$("head").addEventListener("click", () => $("panel").classList.toggle("shut"));
+addEventListener("keydown", e => {
+  if (e.target === $("q")) return;
+  if (e.key === "/") { e.preventDefault(); $("q").focus(); }
+  if (e.key === "f") fit();
+  if (e.key === "l") { $("local").checked = !$("local").checked; fitted = false; rebuild(); }
+  if (e.key === "t") { $("tags").checked = !$("tags").checked; remember(); rebuild(); }
+});
+addEventListener("resize", resize);
+
+// ---- live -------------------------------------------------------------------
+function listen() {
+  const events = new EventSource(api("/events", { topic: "graph" }));
+  events.onopen = () => { $("lost").style.display = "none"; };
+  events.onerror = () => { $("lost").style.display = "block"; };
+  events.addEventListener("current", e => { current = JSON.parse(e.data).id; if ($("local").checked) { fitted = false; rebuild(); } });
+  events.addEventListener("changed", load);
+}
+resize();
+load().then(() => { listen(); frame(); });
+</script>
+</body>
+</html>

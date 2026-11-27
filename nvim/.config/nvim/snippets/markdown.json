@@ -1,0 +1,22 @@
+{
+  "Task": { "prefix": "task", "body": "- [ ] $0", "description": "Task" },
+  "Task with a date": { "prefix": "due", "body": "- [ ] ${1:task} 📅 ${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE}$0", "description": "Task due today" },
+  "Callout": { "prefix": "callout", "body": ["> [!${1|note,tip,info,warning,important,question,example,quote,todo,abstract,success,danger,bug|}] ${2:Title}", "> $0"], "description": "Callout" },
+  "Folded callout": { "prefix": "fold", "body": ["> [!${1|note,tip,info,warning,question,example|}]- ${2:Title}", "> $0"], "description": "Callout, folded in Obsidian" },
+  "Properties": { "prefix": "prop", "body": ["---", "tags: [$1]", "aliases: [$2]", "---", "", "$0"], "description": "Properties (frontmatter)" },
+  "Tasks query": { "prefix": "tasksq", "body": ["```tasks", "not done", "${1:due before in one week}", "${2:sort by due}", "```", "$0"], "description": "Tasks query" },
+  "Dataview table": { "prefix": "dvtable", "body": ["```dataview", "TABLE ${1:file.mday} AS \"${2:Edited}\"", "FROM ${3:#tag}", "SORT ${4:file.mday DESC}", "```", "$0"], "description": "Dataview table" },
+  "Dataview list": { "prefix": "dvlist", "body": ["```dataview", "LIST", "FROM ${1:#tag}", "SORT ${2:file.name}", "```", "$0"], "description": "Dataview list" },
+  "Dataview tasks": { "prefix": "dvtask", "body": ["```dataview", "TASK", "FROM ${1:#project}", "WHERE !completed", "```", "$0"], "description": "Dataview tasks" },
+  "Inline query": { "prefix": "inlineq", "body": "`= ${1:this.file.words}`$0", "description": "Inline query" },
+  "Code block": { "prefix": "code", "body": ["```${1:python}", "$0", "```"], "description": "Code block" },
+  "Maths block": { "prefix": "math", "body": ["$$", "$0", "$$"], "description": "Maths block" },
+  "Mermaid flowchart": { "prefix": "mermaid", "body": ["```mermaid", "flowchart ${1|LR,TD|}", "  A[${2:Start}] --> B[${3:End}]", "```", "$0"], "description": "Mermaid diagram" },
+  "Mermaid sequence": { "prefix": "sequence", "body": ["```mermaid", "sequenceDiagram", "  ${1:Alice}->>${2:Bob}: ${3:Hello}", "```", "$0"], "description": "Mermaid sequence diagram" },
+  "Flashcard": { "prefix": "card", "body": "${1:Question}::${2:Answer}$0", "description": "Flashcard" },
+  "Long flashcard": { "prefix": "cardlong", "body": ["${1:Question}", "?", "${2:Answer}", "", "$0"], "description": "Flashcard over several lines" },
+  "Comment": { "prefix": "comment", "body": "%%$0%%", "description": "Comment (not exported)" },
+  "Details": { "prefix": "details", "body": ["<details>", "<summary>${1:Summary}</summary>", "", "$0", "", "</details>"], "description": "Collapsible section" },
+  "Today": { "prefix": "today", "body": "[[${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE}]]$0", "description": "Link to today" },
+  "Now": { "prefix": "now", "body": "${CURRENT_HOUR}:${CURRENT_MINUTE}$0", "description": "The time" }
+}

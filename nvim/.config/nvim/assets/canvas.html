@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Canvas</title>
+<link rel="stylesheet" href="https://esm.sh/@excalidraw/excalidraw@0.18.1/dist/prod/index.css">
+<script>window.EXCALIDRAW_ASSET_PATH = "https://esm.sh/@excalidraw/excalidraw@0.18.1/dist/prod/";</script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client"
+  }
+}
+</script>
+<style>
+  html, body, #app { height: 100%; margin: 0; }
+  body { font: 14px/1.4 ui-sans-serif, system-ui, sans-serif; background: #1e1e1e; color: #ddd; }
+  #loading { display: grid; place-items: center; height: 100%; color: #999; }
+  .notes-bar { display: flex; gap: 6px; align-items: center; }
+  .notes-bar button { font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--color-surface-low, #ccc); background: var(--island-bg-color, #fff); color: var(--text-primary-color, #222); }
+  .notes-bar button:hover { border-color: var(--color-primary, #6965db); }
+  .notes-bar .status { font-size: 12px; color: var(--color-gray-50, #888); min-width: 52px; text-align: right; }
+  #picker { position: fixed; inset: 0; display: none; background: rgba(0,0,0,.35); z-index: 100; }
+  #picker.open { display: block; }
+  #picker .box { width: min(560px, 92vw); margin: 12vh auto 0; background: #fff; color: #222; border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.35); overflow: hidden; }
+  .dark #picker .box { background: #232329; color: #e3e3e8; }
+  #picker input { width: 100%; box-sizing: border-box; border: 0; padding: 14px 16px; font: inherit; font-size: 15px;
+    outline: none; background: transparent; color: inherit; border-bottom: 1px solid rgba(127,127,127,.25); }
+  #picker ul { list-style: none; margin: 0; padding: 4px 0; max-height: 50vh; overflow: auto; }
+  #picker li { padding: 7px 16px; cursor: pointer; }
+  #picker li.on { background: rgba(105,101,219,.16); }
+  #picker li b { font-weight: 600; }
+  #picker li span { display: block; font-size: 12px; opacity: .65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+</head>
+<body>
+<div id="app"><div id="loading">Loading Excalidraw…</div></div>
+<div id="picker"><div class="box"><input placeholder="Add a note as a card…" spellcheck="false"><ul></ul></div></div>
+<script type="module">
+import React from "react";
+import { createRoot } from "react-dom/client";
+import {
+  Excalidraw, MainMenu, exportToSvg, loadFromBlob, convertToExcalidrawElements, viewportCoordsToSceneCoords,
+} from "https://esm.sh/@excalidraw/excalidraw@0.18.1?external=react,react-dom";
+
+const h = React.createElement;
+const TOKEN = "__TOKEN__";
+const id = new URLSearchParams(location.search).get("id");
+const call = (path, args = {}) => path + "?" + new URLSearchParams({ t: TOKEN, ...args });
+
+const scene = await (await fetch(call("/scene", { id }))).json();
+document.title = scene.name + " — canvas";
+if (scene.dark) document.body.classList.add("dark");
+
+const PALETTE = [
+  ["#1971c2", "#d0ebff"], ["#2f9e44", "#d3f9d8"], ["#e8590c", "#ffe8cc"],
+  ["#9c36b5", "#f3d9fa"], ["#c2255c", "#ffdeeb"], ["#0c8599", "#c5f6fa"], ["#f08c00", "#fff3bf"],
+];
+const FONT = 2; // Helvetica: what the image looks like outside the browser too
+
+// A mind map from an outline { text, children }: a tree from left to right.
+function mindmap(tree) {
+  const skeleton = [];
+  const W = 190, GAP_X = 70, ROW = 64;
+  let leaf = 0, n = 0;
+  function width(text, depth) { return Math.min(depth === 0 ? 260 : W, Math.max(90, text.length * 8.5 + 30)); }
+  function place(node, depth, colours) {
+    const kids = node.children || [];
+    const me = "n" + n++;
+    const ys = kids.map((kid, i) => place(kid, depth + 1, depth === 0 ? PALETTE[i % PALETTE.length] : colours));
+    const y = kids.length ? (ys[0].y + ys[ys.length - 1].y) / 2 : leaf++ * ROW;
+    const w = width(node.text, depth);
+    const x = depth === 0 ? -w : depth * (W + GAP_X) - W;
+    const [stroke, fill] = colours || ["#1e1e1e", "#fff9db"];
+    const height = depth === 0 ? 60 : 44;
+    skeleton.push({
+      id: me, type: "rectangle", x, y: y - height / 2, width: w, height,
+      strokeColor: stroke, backgroundColor: depth === 0 ? "#fff9db" : fill, fillStyle: "solid",
+      roundness: { type: 3 }, strokeWidth: depth === 0 ? 2 : 1, roughness: 1,
+      label: { text: node.text, fontSize: depth === 0 ? 22 : depth === 1 ? 18 : 16, fontFamily: FONT },
+    });
+    for (const kid of ys) {
+      // From the middle of this box's right edge to the middle of the child's left edge
+      skeleton.push({
+        type: "arrow", x: x + w + 4, y, width: kid.x - (x + w) - 8, height: kid.y - y,
+        strokeColor: kid.stroke, strokeWidth: 1.5, roughness: 1,
+        start: { id: me }, end: { id: kid.id }, endArrowhead: null,
+      });
+    }
+    return { id: me, x, y, stroke };
+  }
+  place(tree, 0, null);
+  return convertToExcalidrawElements(skeleton);
+}
+
+let initial = { elements: [], appState: { viewBackgroundColor: "#ffffff" }, files: {}, scrollToContent: true };
+if (scene.svg) {
+  const data = await loadFromBlob(new Blob([scene.svg], { type: "image/svg+xml" }), null, null);
+  initial = { elements: data.elements, appState: { viewBackgroundColor: data.appState.viewBackgroundColor || "#ffffff" }, files: data.files, scrollToContent: true };
+} else if (scene.outline) {
+  initial.elements = mindmap(scene.outline);
+}
+initial.appState.currentItemFontFamily = FONT;
+initial.appState.theme = scene.dark ? "dark" : "light";
+
+// Saving: on every change (after a pause) and with Ctrl-S, as an SVG with the scene in it.
+let api = null, signature = null, timer = null, setStatus = () => {};
+const sign = els => els.reduce((s, e) => s + e.id + ":" + e.version + ",", "");
+async function save(force) {
+  if (!api) return;
+  const elements = api.getSceneElements();
+  const now = sign(elements);
+  if (!force && now === signature) return;
+  signature = now;
+  setStatus("Saving…");
+  const appState = api.getAppState();
+  const svg = await exportToSvg({
+    elements, files: api.getFiles(), exportPadding: 24,
+    appState: { ...appState, exportEmbedScene: true, exportBackground: true, exportWithDarkMode: false },
+  });
+  const res = await fetch(call("/save", { id }), { method: "POST", body: svg.outerHTML, headers: { "Content-Type": "image/svg+xml" } });
+  setStatus(res.ok ? "Saved" : "Not saved!");
+}
+const later = () => { clearTimeout(timer); timer = setTimeout(() => save(false), 700); };
+addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); save(true); } });
+addEventListener("beforeunload", () => save(false));
+
+// Note cards: a rectangle with the title and the first line, linked to the note.
+let notes = null;
+const picker = document.getElementById("picker");
+const input = picker.querySelector("input"), list = picker.querySelector("ul");
+let shown = [], active = 0;
+function render() {
+  const q = input.value.trim().toLowerCase();
+  shown = notes.filter(n => !q || n.name.toLowerCase().includes(q) || n.folder.toLowerCase().includes(q)).slice(0, 40);
+  active = Math.min(active, Math.max(0, shown.length - 1));
+  list.replaceChildren(...shown.map((n, i) => {
+    const li = document.createElement("li");
+    if (i === active) li.className = "on";
+    const b = document.createElement("b"); b.textContent = n.name;
+    const span = document.createElement("span"); span.textContent = n.excerpt || n.folder;
+    li.append(b, span);
+    li.onclick = () => addCard(n);
+    return li;
+  }));
+}
+async function openPicker() {
+  notes = notes || await (await fetch(call("/notes"))).json();
+  picker.classList.add("open"); input.value = ""; active = 0; render(); input.focus();
+}
+const closePicker = () => picker.classList.remove("open");
+input.oninput = () => { active = 0; render(); };
+input.onkeydown = e => {
+  if (e.key === "ArrowDown") { active = Math.min(shown.length - 1, active + 1); render(); e.preventDefault(); }
+  if (e.key === "ArrowUp") { active = Math.max(0, active - 1); render(); e.preventDefault(); }
+  if (e.key === "Enter" && shown[active]) addCard(shown[active]);
+  if (e.key === "Escape") closePicker();
+  e.stopPropagation();
+};
+picker.onclick = e => { if (e.target === picker) closePicker(); };
+let cards = 0;
+function addCard(note) {
+  closePicker();
+  const state = api.getAppState();
+  const centre = viewportCoordsToSceneCoords({ clientX: innerWidth / 2, clientY: innerHeight / 2 }, state);
+  const [stroke, fill] = PALETTE[cards++ % PALETTE.length];
+  const text = note.excerpt ? note.name + "\n\n" + (note.excerpt.length > 110 ? note.excerpt.slice(0, 108) + "…" : note.excerpt) : note.name;
+  const card = convertToExcalidrawElements([{
+    type: "rectangle", x: centre.x - 130 + cards * 14, y: centre.y - 60 + cards * 14, width: 260, height: note.excerpt ? 120 : 56,
+    strokeColor: stroke, backgroundColor: fill, fillStyle: "solid", roundness: { type: 3 }, roughness: 0,
+    link: "[[" + note.name + "]]",
+    label: { text, fontSize: 16, fontFamily: FONT, textAlign: "left", verticalAlign: "top" },
+  }]);
+  api.updateScene({ elements: [...api.getSceneElements(), ...card] });
+  later();
+}
+
+// [[Note]] links open the note in Neovim.
+function onLinkOpen(element, event) {
+  const link = element.link || "";
+  const m = link.match(/^\[\[([^\]|#]+)/);
+  if (m) {
+    event.preventDefault();
+    fetch(call("/open", { name: m[1] }));
+  }
+}
+
+function App() {
+  const [status, setS] = React.useState(scene.svg ? "" : "New");
+  setStatus = setS;
+  return h(Excalidraw, {
+    initialData: initial,
+    excalidrawAPI: a => { api = a; },
+    onChange: later,
+    onLinkOpen,
+    theme: scene.dark ? "dark" : "light",
+    name: scene.name,
+    UIOptions: { canvasActions: { loadScene: false, saveToActiveFile: false, export: { saveFileToDisk: true } } },
+    renderTopRightUI: () => h("div", { className: "notes-bar" },
+      h("button", { onClick: openPicker, title: "Add a note as a card (N)" }, "+ Note"),
+      h("span", { className: "status" }, status)),
+  },
+  h(MainMenu, null,
+    h(MainMenu.DefaultItems.SaveAsImage),
+    h(MainMenu.DefaultItems.ClearCanvas),
+    h(MainMenu.DefaultItems.ToggleTheme),
+    h(MainMenu.DefaultItems.ChangeCanvasBackground),
+    h(MainMenu.DefaultItems.Help)));
+}
+
+addEventListener("keydown", e => {
+  if (e.key === "N" && e.shiftKey && !e.ctrlKey && !e.metaKey && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); openPicker(); }
+});
+document.getElementById("loading").remove();
+createRoot(document.getElementById("app")).render(h(App));
+if (scene.outline) setTimeout(() => save(true), 1200);
+window.__canvas = { save: () => save(true), get api() { return api; }, addCard, openPicker };
+</script>
+</body>
+</html>
