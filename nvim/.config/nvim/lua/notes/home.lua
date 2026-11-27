@@ -4,7 +4,10 @@ local M = {}
 
 local function greeting()
 	local hour = tonumber(os.date("%H"))
-	local part = hour < 5 and "Good night" or hour < 12 and "Good morning" or hour < 18 and "Good afternoon" or "Good evening"
+	local part = hour < 5 and "Good night"
+		or hour < 12 and "Good morning"
+		or hour < 18 and "Good afternoon"
+		or "Good evening"
 	return part .. os.date(" · %A, %d %B")
 end
 
@@ -19,7 +22,7 @@ local function keys()
 		{ "󰘸 ", "Review cards", "r", "<leader>kk" },
 		{ "󱁉 ", "Graph", "g", "<leader>pg" },
 		{ "󰋖 ", "Keys and help", "?", "<leader>?" },
-		{ " ", "Dashboard", "d", "dashboard" },
+		{ "󰕮 ", "Dashboard", "d", "dashboard" },
 		{ "󰗼 ", "Quit", "q", "quit" },
 	}
 	local section = { padding = 1 }
@@ -106,7 +109,12 @@ local function summary()
 		for _, e in ipairs(all) do
 			words, links = words + e.words, links + #e.links
 		end
-		local parts = { ("%d notes"):format(#all), ("%d links"):format(links), ("%d tags"):format(vim.tbl_count(index.tags())), ("%dk words"):format(math.floor(words / 1000 + 0.5)) }
+		local parts = {
+			("%d notes"):format(#all),
+			("%d links"):format(links),
+			("%d tags"):format(vim.tbl_count(index.tags())),
+			("%dk words"):format(math.floor(words / 1000 + 0.5)),
+		}
 		local _, due, new = require("notes.cards").due()
 		if due + new > 0 then
 			parts[#parts + 1] = ("%d cards due"):format(due + new)
