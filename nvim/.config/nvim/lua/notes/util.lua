@@ -178,6 +178,7 @@ end
 function M.yaml_scalar(value)
 	local s = tostring(value or "")
 	local special = s == "" or s:find(": ", 1, true) or s:find(" #", 1, true) or s:match("^[%s%-?:,%[%]{}#&*!|>'\"%%@`]") or s:match("%s$")
+		or s:match("^[%d_.:+%-]+$") -- 2026_11_23 would be read as a number
 	local word = ({ yes = true, no = true, ["true"] = true, ["false"] = true, null = true, ["~"] = true })[s:lower()]
 	if special or word then
 		return '"' .. (s:gsub("\\", "\\\\"):gsub('"', '\\"')) .. '"'

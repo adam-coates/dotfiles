@@ -148,6 +148,8 @@ function M.render(item)
 		abstract = item.abstract ~= "" and item.abstract or "—",
 		annotations = #annotations > 0 and vim.trim(table.concat(annotations, "\n")) or "*None yet.*",
 		zotero = "zotero://select/library/items/" .. item.key,
+		-- where the note goes, for the location property
+		location = vault.rel(vim.fs.dirname(M.path(item))) or require("settings").folders.literature,
 	}
 	local text = require("notes.template").render("literature", vars)
 	if text == "" then
