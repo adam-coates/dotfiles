@@ -12,6 +12,10 @@ source "$OMARCHY_PATH/default/bash/rc"
 #
 # Make an alias for invoking commands you use constantly
 # alias p='python'
+
+# Notes in ~/notes: a new note in the inbox, and filing the inbox by location
+alias on=~/scripts/on
+alias sort_inbox=~/scripts/sort_inbox.sh
 command -v direnv &>/dev/null && eval "$(direnv hook bash)"
 
 [[ -r "$HOME/.local/share/../bin/env" ]] && . "$HOME/.local/share/../bin/env"

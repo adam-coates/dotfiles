@@ -79,20 +79,9 @@ function M.apply(path)
 	end
 end
 
---- Create the first vault from vault-template/ if it isn't there yet, and drop
---- vaults whose folder is missing.
+--- The vaults whose folder exists.
 function M.prepare()
 	local vaults = M.list()
-	local first = vaults[1]
-	-- Only into a vault with the default layout: the demo's folders are those.
-	if first and settings.create_missing_vault and not first.folders and not vim.uv.fs_stat(first.path) then
-		vim.fn.mkdir(first.path, "p")
-		local template = vim.fn.stdpath("config") .. "/vault-template"
-		if vim.uv.fs_stat(template) then
-			vim.system({ "cp", "-r", template .. "/.", first.path }):wait()
-			require("notes.template").stamp(first.path)
-		end
-	end
 	return vim.tbl_filter(function(v)
 		return vim.uv.fs_stat(v.path) ~= nil
 	end, vaults)

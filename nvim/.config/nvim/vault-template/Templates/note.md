@@ -1,7 +1,0 @@
----
-created: {{date}}
-tags: []
----
-
-# {{title}}
-

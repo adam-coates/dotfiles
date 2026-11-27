@@ -36,9 +36,6 @@ M.vaults = {
 	{ name = "demo", path = "~/nvim-test-vault" },
 }
 
--- Create the first vault from vault-template/ when its folder doesn't exist.
-M.create_missing_vault = true
-
 -- Folders, relative to the vault ----------------------------------------------
 M.folders = {
 	inbox = "Inbox", -- new notes and quick captures

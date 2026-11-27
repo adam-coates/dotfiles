@@ -108,36 +108,4 @@ function M.render(key, vars, date)
 	return M.substitute(text, vars, date or (vars and vars.day))
 end
 
---- Fill in the [[+N]] dates in a freshly copied demo vault, so its tasks and
---- journal are always about "now".
-function M.stamp(root)
-	local today = D.today()
-	local function stamp(text)
-		text = text:gsub("@@(%w+)([+-]%d+)@@", function(kind, n)
-			local day = D.add(today, tonumber(n), "day")
-			if kind == "week" then
-				return D.week_id(day)
-			elseif kind == "month" then
-				return day:sub(1, 7)
-			end
-			return day
-		end)
-		return text
-	end
-	for name, kind in vim.fs.dir(root, { depth = 10 }) do
-		if kind == "file" and name:match("%.md$") and not name:match("^Templates/") then
-			local path = vim.fs.joinpath(root, name)
-			local text = util.read(path)
-			local new = stamp(text)
-			local target = vim.fs.joinpath(root, stamp(name))
-			if new ~= text then
-				util.write(path, new)
-			end
-			if target ~= path then
-				vim.uv.fs_rename(path, target)
-			end
-		end
-	end
-end
-
 return M

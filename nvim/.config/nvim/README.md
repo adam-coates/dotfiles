@@ -4,7 +4,7 @@ Obsidian and its most useful plugins, in Neovim, together with everything from y
 
 It lives in `~/dotfiles/nvim` and is linked to `~/.config/nvim` with stow. The config it replaced is kept in `~/.config/nvim-backup` and under the tag `nvim-before-notes` in the dotfiles repository (see *Going back*).
 
-The first start installs the plugins and parsers itself. That takes about a minute; mason then installs your previous config's language servers, linters, formatters and debugger, plus Harper and Tectonic, in the background (about 1.5 GB, a few minutes). The demo vault, `~/nvim-test-vault` (made from `vault-template/`), doubles as a guide: start with *Guide/Start here*, or press `<Space>?` for every key.
+The first start installs the plugins and parsers itself. That takes about a minute; mason then installs your previous config's language servers, linters, formatters and debugger, plus Harper and Tectonic, in the background (about 1.5 GB, a few minutes). The demo vault, `~/nvim-test-vault`, doubles as a guide: start with *Guide/Start here*, or press `<Space>?` for every key.
 
 Your vault, `~/notes`, is the first in `vaults` in `lua/settings.lua` (`<Space>ws`), with its own folders (`00 - Inbox`, `03 - Logs/Daily`, `999-extra/Templates`, …), your templates, weekly notes named after their Monday, and `ask_location`: a new note (`<Space>nn`) asks for its title, location and tags, is made in that folder and gets `location` in its properties. `<Space>nm` moves a note and updates `location`, `<Space>nf` files a note where its location says, `<Space>nF` does that for the whole inbox, `<Space>na` adds a person to `05 - People`. Any vault can have its own settings like that; the demo keeps the defaults.
 
@@ -96,21 +96,11 @@ ftplugin/ autoload/    from your previous config (Typst keys, herdr target for v
 assets/graph.html      the graph page
 doc/keys.md            the keys (<Space>?)
 snippets/              markdown snippets
-vault-template/        the demo vault
-tests/run.lua          tests for the local modules
 ```
 
 ## Commands
 
 `:Today` `:Week` `:Calendar` `:Agenda` `:Task call Anna tomorrow` `:Todoist …` `:TodoistToken` `:Capture` `:Board` `:Canvas` `:MindMap` `:Graph` `:Review` `:Sync` `:Export pdf` `:Keys`, and all of `:Obsidian …`. From your previous config: `:Table` `:DocxReview` `:ZoteroAnnotations` `:PrintBuffer` `:QuartoPreview`. `:PackUpdate` updates the plugins and `:checkhealth notes` checks the tools.
-
-## Tests
-
-```sh
-nvim --headless -l ~/.config/nvim/tests/run.lua
-```
-
-They cover dates, tasks and recurrence, the index, Dataview and Tasks queries, kanban parsing, flashcards and scheduling, refactoring, export and capture. They run on a temporary vault.
 
 ## Notes
 
